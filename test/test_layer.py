@@ -1,14 +1,16 @@
+import _parent
 from copy import deepcopy
 import unittest
-
 import torch
 from torch import tensor
 from torch.autograd import Variable
 from torch.nn import Parameter
-from torch.nn.modules import Linear, MSELoss
+from torch.nn.modules import Linear
 from torchvision import models
-
 from layers.static import SemiSyncLinear
+
+
+# from torch.nn.modules import MSELoss
 
 
 class TestSemiSyncNet(unittest.TestCase):
@@ -149,9 +151,9 @@ class TestSemiSync(unittest.TestCase):
 
     def testRotate(self):
         X = tensor([  # データ数3と仮定, shape=(3, 2)
-                    [1.2, 1.4],
-                    [-0.8, 0.2],
-                    [1.1, -1.2]
+            [1.2, 1.4],
+            [-0.8, 0.2],
+            [1.1, -1.2]
         ], requires_grad=True).to('cuda')
 
         self.layer.forward(X)
