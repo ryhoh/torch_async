@@ -5,12 +5,13 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision.models import vgg
-from layers.static import *
+from layers.static import Rotatable, OptimizedSemiSyncLinear
 
 
 # from torch.nn.modules import Linear
 # from procedure import preprocess
-# from models.dense import SimpleMLP, FeatureClassifyMLP, FeatureClassifyMLPFrontVer
+# from models.dense import SimpleMLP, FeatureClassifyMLP
+# from models.dense import FeatureClassifyMLPFrontVer
 
 
 GPU_ENABLED = False
@@ -92,7 +93,8 @@ def conduct(model: nn.Module, train_loader, test_loader) -> dict:
             # forward - backward - optimize
             outputs = model(in_tensor)
             loss_vector = loss_layer(outputs, label_tensor)  # for evaluation
-            reduced_loss = loss_layer_reduce(outputs, label_tensor)  # for backward
+            reduced_loss = loss_layer_reduce(
+                outputs, label_tensor)  # for backward
             _, predicted = torch.max(outputs.data, 1)
 
             reduced_loss.backward()
@@ -171,19 +173,18 @@ if __name__ == '__main__':
         torch.manual_seed(0)
 
         model = vgg.vgg16()
-        # model = FeatureClassifyMLPFrontVer()
-        #
+        # models = FeatureClassifyMLPFrontVer()
         # if semisync:
         #     for layer_i in (0, 3):
-        #         models.classifier[layer_i] = SemiSyncLinear(models.classifier[layer_i])
-        #
+        #         models.classifier[layer_i] = \
+        #             SemiSyncLinear(models.classifier[layer_i])
         # if GPU_ENABLED:
         #     models.to('cuda')
-        #
         if semisync:
-        #     targets = [0]
-        #     for target in targets:
-        #         model.classifier[target] = OptimizedContinuousLinear(model.classifier[target])
+            # targets = [0]
+            # for target in targets:
+            #     model.classifier[target] = \
+            #         OptimizedContinuousLinear(model.classifier[target])
 
             model.classifier[0] = OptimizedSemiSyncLinear(model.classifier[0])
             model.classifier[3] = OptimizedSemiSyncLinear(model.classifier[3])
