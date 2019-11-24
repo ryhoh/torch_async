@@ -6,12 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision.models import vgg
 from layers.static import Rotatable, OptimizedSemiSyncLinear
-
-
-# from torch.nn.modules import Linear
-# from procedure import preprocess
-# from models.dense import SimpleMLP, FeatureClassifyMLP
-# from models.dense import FeatureClassifyMLPFrontVer
+import preprocess
 
 
 GPU_ENABLED = False
@@ -173,33 +168,24 @@ if __name__ == '__main__':
         torch.manual_seed(0)
 
         model = vgg.vgg16()
-        # models = FeatureClassifyMLPFrontVer()
-        # if semisync:
-        #     for layer_i in (0, 3):
-        #         models.classifier[layer_i] = \
-        #             SemiSyncLinear(models.classifier[layer_i])
-        # if GPU_ENABLED:
-        #     models.to('cuda')
-        if semisync:
-            # targets = [0]
-            # for target in targets:
-            #     model.classifier[target] = \
-            #         OptimizedContinuousLinear(model.classifier[target])
 
+        if GPU_ENABLED:
+            model.to('cuda')
+        if semisync:
             model.classifier[0] = OptimizedSemiSyncLinear(model.classifier[0])
             model.classifier[3] = OptimizedSemiSyncLinear(model.classifier[3])
 
         print(model)
 
-        # model.train()
-        # record = conduct(model, *(preprocess.mnist_loaders()))
-        #
-        # pd.DataFrame({
-        #     'train_loss':     record['train_loss'],
-        #     'train_accuracy': record['train_accuracy'],
-        # }).to_csv("semisync_" + str(semisync) + "_train.csv")
-        #
-        # pd.DataFrame({
-        #     'validation_loss':     record['validation_loss'],
-        #     'validation_accuracy': record['validation_accuracy'],
-        # }).to_csv("semisync_" + str(semisync) + "_valid.csv")
+        model.train()
+        record = conduct(model, *(preprocess.mnist_loaders()))
+
+        pd.DataFrame({
+            'train_loss':     record['train_loss'],
+            'train_accuracy': record['train_accuracy'],
+        }).to_csv("semisync_" + str(semisync) + "_train.csv")
+
+        pd.DataFrame({
+            'validation_loss':     record['validation_loss'],
+            'validation_accuracy': record['validation_accuracy'],
+        }).to_csv("semisync_" + str(semisync) + "_valid.csv")
