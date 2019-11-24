@@ -178,7 +178,7 @@ if __name__ == '__main__':
         print(model)
 
         model.train()
-        record = conduct(model, *(preprocess.mnist_loaders()))
+        record = conduct(model, *(preprocess.cifar_10_for_vgg_loaders()))
 
         pd.DataFrame({
             'train_loss':     record['train_loss'],
