@@ -6,9 +6,16 @@
 
 ## Installation
 ```
-  $ pip install -r requirements.txt
+  $ cd Docker
+  # コンテナを起動
+  $ docker-compose up -d
+  # 出力先のポート番号を確認
+  $ docker-compose ps
+  #     Name                  Command               State            Ports         
+  # -------------------------------------------------------------------------------
+  # docker_app_1   jupyter-lab --no-browser - ...   Up      0.0.0.0:32770->8080/tcp
+  #                                                       ここの番号↑
 ```
-
-## Usage
-```
-```
+**`localhost:ポート番号` にアクセスするとjupyterにつながります**
+## Tutorial
+jupyterで`Tutorial.ipynb`を開く
