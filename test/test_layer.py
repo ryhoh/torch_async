@@ -1,14 +1,16 @@
+import _parent
 from copy import deepcopy
 import unittest
-
 import torch
 from torch import tensor
 from torch.autograd import Variable
 from torch.nn import Parameter
-from torch.nn.modules import Linear, MSELoss
+from torch.nn.modules import Linear
 from torchvision import models
-
 from layers.static import SemiSyncLinear
+
+
+# from torch.nn.modules import MSELoss
 
 
 class TestSemiSyncNet(unittest.TestCase):
@@ -30,8 +32,10 @@ class TestSemiSyncNet(unittest.TestCase):
         # 別オブジェクトだが同じパラメータを持つことを確認
         self.assertTrue(self.vgg16 is not self.vgg16_semisync)
 
-        for layer1, layer2 in zip(self.vgg16.classifier, self.vgg16_semisync.classifier):
-            self.assertTrue(isinstance(layer1, Linear) == isinstance(layer2, Linear))
+        for layer1, layer2 in zip(self.vgg16.classifier,
+                                  self.vgg16_semisync.classifier):
+            self.assertTrue(isinstance(layer1, Linear) ==
+                            isinstance(layer2, Linear))
 
             if isinstance(layer1, Linear) and isinstance(layer2, Linear):
                 self.assertTrue((layer1.weight == layer2.weight).byte().all())
@@ -46,7 +50,8 @@ class TestSemiSync(unittest.TestCase):
             [1.7, 0.4, 1, 2.2],
             [1.8, -1, 0.9, -0.2]
         ], requires_grad=True).t())
-        base_layer.bias = Parameter(tensor([0.0, 0.0, 0.0, 0.0], requires_grad=True))
+        base_layer.bias = Parameter(
+            tensor([0.0, 0.0, 0.0, 0.0], requires_grad=True))
 
         self.layer = SemiSyncLinear(base_layer, group_list=None).to('cuda')
 
@@ -91,12 +96,12 @@ class TestSemiSync(unittest.TestCase):
         dout = self.layer.forward(X)
         dout.backward(torch.ones((3, 4)).to('cuda'))
 
-        self.assertTrue(
-            torch.all(torch.abs(expected_dx - X.grad) < 10e-6).item())
-        self.assertTrue(
-            torch.all(torch.abs(expected_dW - self.layer.weight.grad) < 10e-6).item())
-        self.assertTrue(
-            torch.all(torch.abs(expected_db - self.layer.bias.grad) < 10e-6).item())
+        self.assertTrue(torch.all(
+            torch.abs(expected_dx - X.grad) < 10e-6).item())
+        self.assertTrue(torch.all(
+            torch.abs(expected_dW - self.layer.weight.grad) < 10e-6).item())
+        self.assertTrue(torch.all(
+            torch.abs(expected_db - self.layer.bias.grad) < 10e-6).item())
 
         self.layer.rotate()
 
@@ -115,12 +120,12 @@ class TestSemiSync(unittest.TestCase):
         dout = self.layer.forward(X)
         dout.backward(torch.ones((3, 4)).to('cuda'))
 
-        self.assertTrue(
-            torch.all(torch.abs(expected_dx - X.grad) < 10e-6).item())
-        self.assertTrue(
-            torch.all(torch.abs(expected_dW - self.layer.weight.grad) < 10e-6).item())
-        self.assertTrue(
-            torch.all(torch.abs(expected_db - self.layer.bias.grad) < 10e-6).item())
+        self.assertTrue(torch.all(
+            torch.abs(expected_dx - X.grad) < 10e-6).item())
+        self.assertTrue(torch.all(
+            torch.abs(expected_dW - self.layer.weight.grad) < 10e-6).item())
+        self.assertTrue(torch.all(
+            torch.abs(expected_db - self.layer.bias.grad) < 10e-6).item())
 
         self.layer.rotate()
 
@@ -138,20 +143,20 @@ class TestSemiSync(unittest.TestCase):
 
         dout = self.layer.forward(X)
         dout.backward(torch.ones((3, 4)).to('cuda'))
-        self.assertTrue(
-            torch.all(torch.abs(expected_dx - X.grad) < 10e-6).item())
-        self.assertTrue(
-            torch.all(torch.abs(expected_dW - self.layer.weight.grad) < 10e-6).item())
-        self.assertTrue(
-            torch.all(torch.abs(expected_db - self.layer.bias.grad) < 10e-6).item())
+        self.assertTrue(torch.all(
+            torch.abs(expected_dx - X.grad) < 10e-6).item())
+        self.assertTrue(torch.all(
+            torch.abs(expected_dW - self.layer.weight.grad) < 10e-6).item())
+        self.assertTrue(torch.all(
+            torch.abs(expected_db - self.layer.bias.grad) < 10e-6).item())
 
         self.layer.rotate()
 
     def testRotate(self):
         X = tensor([  # データ数3と仮定, shape=(3, 2)
-                    [1.2, 1.4],
-                    [-0.8, 0.2],
-                    [1.1, -1.2]
+            [1.2, 1.4],
+            [-0.8, 0.2],
+            [1.1, -1.2]
         ], requires_grad=True).to('cuda')
 
         self.layer.forward(X)
@@ -179,7 +184,8 @@ class TestSemiSync(unittest.TestCase):
 class TestSemiSyncAtUnbalance(unittest.TestCase):
     def setUp(self) -> None:
         torch.manual_seed(0)
-        self.layer = SemiSyncLinear(Linear(4000, 4000), group_list=None).to('cuda')
+        self.layer = SemiSyncLinear(
+            Linear(4000, 4000), group_list=None).to('cuda')
 
     def testGroup(self):
         expected = [63 * i for i in range(64)] + [4000]

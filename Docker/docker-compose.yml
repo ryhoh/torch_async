@@ -1,0 +1,21 @@
+version: '2.3'
+services:
+  app:
+    build: .
+    ports:
+      - 8080
+    shm_size: 2g
+    volumes:
+      - ../:/work
+    working_dir: /work
+    runtime: nvidia
+    tty: true
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    command: >
+      jupyter-lab
+      --no-browser
+      --port=8080
+      --ip=0.0.0.0
+      --allow-root
+      --NotebookApp.token=''
