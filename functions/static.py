@@ -54,11 +54,17 @@ class OptimizedGroupLinearFunction(Function):
         learn_l, learn_r = int(learn_l), int(learn_r)
 
         # バイアスへの勾配は、0ベクトルを作って必要な要素だけ値を入れる
-        d_b = torch.zeros(size=(grad.shape[1],), dtype=torch.float32)
+        if grad.is_cuda:
+            d_b = torch.zeros(size=(grad.shape[1],), dtype=torch.float32, device='cuda')
+        else:
+            d_b = torch.zeros(size=(grad.shape[1],), dtype=torch.float32)
         d_b[learn_l:learn_r] = torch.sum(grad[:, learn_l:learn_r], dim=0)
 
         # パラメータへの勾配は、0行列を作って必要な行だけ値を入れる
-        d_w = torch.zeros(size=(x.shape[1], grad.shape[1]), dtype=torch.float32)
+        if grad.is_cuda:
+            d_w = torch.zeros(size=(x.shape[1], grad.shape[1]), dtype=torch.float32, device='cuda')
+        else:
+            d_w = torch.zeros(size=(x.shape[1], grad.shape[1]), dtype=torch.float32)
         d_w[:, learn_l:learn_r] = torch.matmul(x.t(), grad[:, learn_l:learn_r])
 
         d_x = torch.matmul(grad, torch.t(w))
@@ -83,11 +89,17 @@ class OptimizedContinuousLinearFunction(Function):
         learn_idx = int(learn_idx)
 
         # バイアスへの勾配は、0ベクトルを作って1要素だけ値を入れる
-        d_b = torch.zeros(size=(grad.shape[1],), dtype=torch.float32)
+        if grad.is_cuda:
+            d_b = torch.zeros(size=(grad.shape[1],), dtype=torch.float32, device='cuda')
+        else:
+            d_b = torch.zeros(size=(grad.shape[1],), dtype=torch.float32)
         d_b[learn_idx] = torch.sum(grad[:, learn_idx])
 
         # パラメータへの勾配は、0行列を作って1行だけ値を入れる
-        d_w = torch.zeros(size=(x.shape[1], grad.shape[1]), dtype=torch.float32)
+        if grad.is_cuda:
+            d_w = torch.zeros(size=(x.shape[1], grad.shape[1]), dtype=torch.float32, device='cuda')
+        else:
+            d_w = torch.zeros(size=(x.shape[1], grad.shape[1]), dtype=torch.float32)
         d_w[:, learn_idx] = torch.matmul(x.t(), grad[:, learn_idx])
 
         d_x = torch.matmul(grad, torch.t(w))
