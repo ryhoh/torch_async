@@ -180,7 +180,7 @@ def validate(epoch, model, val_loader, criterion, device):
             accuracy_sum += accuracy
             # log
             fnames_list.append(fnames)
-            outputs_list.append(outputs)
+            outputs_list.append(outputs.to('cpu'))
             # debug
             print('progress: [{0}/{1}]\t'
                   'Loss: {loss:.3f}\t'
@@ -236,7 +236,7 @@ def train(epoch, model, train_loader, optimizer, criterion, device):
         optimizer.step()
         # log
         fnames_list.append(fnames)
-        outputs_list.append(outputs)
+        outputs_list.append(outputs.to('cpu'))
         # debug
         print('Epoch: [{0}][{1}/{2}]\t'
               'Loss {loss:.4f}\t'
