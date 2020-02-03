@@ -27,9 +27,9 @@ def make_layers(cfg, batch_norm=False):
 注意: 最後のMaxPoolingを抜いている
 """
 cfgs = {
-    'vgg16_with_maxpool': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M',
+    'vgg_with_maxpool': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M',
                            512, 512, 512, 'M', 512, 512, 512],
-    'vgg16_without_maxpool': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M',
+    'vgg_without_maxpool': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M',
                               512, 512, 512, 'M', 512, 512, 512, 'M']
 }
 
