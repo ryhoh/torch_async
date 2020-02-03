@@ -51,8 +51,8 @@ parser.add_argument('--gpu', action='store_true', help='flag for Enable GPU')
 def main():
     args = parser.parse_args()
     model_type = args.convolution + '_' + args.pooling +\
-        '_' + args.fc + '_' + args.epochs + '_' + args.batchsize +\
-        '_' + args.lr + '_' + args.momentum + '_' + args.seed
+        '_' + args.fc + '_' + str(args.epochs) + '_' + str(args.batchsize) +\
+        '_' + str(args.lr) + '_' + str(args.momentum) + '_' + str(args.seed)
     writer = SummaryWriter('runs/' + model_type)
 
     ROOT_DIR = "/Volumes/IMAGENET/ImageNet/"
