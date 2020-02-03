@@ -22,21 +22,20 @@ def make_layers(cfg, batch_norm=False):
     return nn.Sequential(*layers)
 
 
-""" vgg16のアーキテクチャ(pytorchから引用)
-
-注意: 最後のMaxPoolingを抜いている
-"""
-cfgs = {
-    'vgg_with_maxpool': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M',
-                           512, 512, 512, 'M', 512, 512, 512],
-    'vgg_without_maxpool': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M',
-                              512, 512, 512, 'M', 512, 512, 512, 'M']
-}
-
-
 class VGGForImageNet(nn.Module):
-    def __init__(self, model_type='vgg16_without_maxpool', num_classes=1000, pooling="average", sync="normal"):
+    def __init__(self, model_type='vgg_without_maxpool', num_classes=1000, pooling="average", sync="normal"):
         super(VGGForImageNet, self).__init__()
+        """ vgg16のアーキテクチャ(pytorchから引用)
+
+        注意: 最後のMaxPoolingを抜いている
+        """
+        cfgs = {
+            'vgg_with_maxpool': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M',
+                                   512, 512, 512, 'M', 512, 512, 512],
+            'vgg_without_maxpool': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M',
+                                      512, 512, 512, 'M', 512, 512, 512, 'M']
+        }
+        
         """ vgg16 """
         self.features = make_layers(cfgs[model_type], batch_norm=False)
 

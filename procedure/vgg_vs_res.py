@@ -81,9 +81,9 @@ def main():
     if args.convolution == 'resnet':
         model = resnet(args.pooling, args.fc).to(device)
     elif args.convolution == 'vgg_without_maxpool':
-        model = vgg(args.convolution, args.pooling, args.fc).to(device)
+        model = vgg(model_type=args.convolution, pooling=args.pooling, sync=args.fc).to(device)
     elif args.convolution == 'vgg_with_maxpool':
-        model = vgg(args.convolution, args.pooling, args.fc).to(device)
+        model = vgg(model_type=args.convolution, pooling=args.pooling, sync=args.fc).to(device)
 
     # モデルを記録
     writer.add_graph(model.to('cpu'), torch.randn(1, 3, 224, 224))
