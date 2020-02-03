@@ -3,6 +3,130 @@ from PIL import Image
 from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10, MNIST, FashionMNIST
 from torchvision import transforms
+from torch.utils.data import Dataset
+import pandas as pd
+import os
+import random
+import numpy as np
+
+
+class IMAGENET(Dataset):
+    """ImageNet用オリジナルDataset
+
+    ファイルパスカラム(path)とラベルカラム(label)を持つcsvを入力とし、
+    Datasetをつくる
+
+    Attributes:
+        normalize (Normalize): 正規化?
+        transform (transform): 前処理?
+        _df (DataFrame): Dataset情報
+        root_dir (str): データセットのルートディレクトリ
+        images (dir): 画像の一覧
+
+    Args:
+        root_dir (str): データセットのルートディレクトリ
+        csv_path (str): ファイルパスカラム(path)とラベルカラム(label)を持つcsv
+    """
+    def __init__(self, root_dir: str, csv_path: str):
+        self.normalize = transforms.Normalize(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225])
+        """ TODO: 前処理 反転やズーム
+
+        とりあえずしない
+        """
+        self.transforms = transforms.Compose([
+            transforms.Resize((224, 224), interpolation=Image.BICUBIC),
+            transforms.ToTensor(),
+            self.normalize,
+        ])
+        self._df = pd.read_csv(csv_path)
+        self.root_dir = root_dir
+        # csvから画像一覧を読み出す
+        self.images = self._df['path'].values.tolist()
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx: int):
+        image_name = self.images[idx]
+        image = Image.open(os.path.join(self.root_dir, image_name))
+        image = image.convert("RGB")
+        if self.transforms:
+            out_data = self.transforms(image)
+        label = self._df.query('path=="'+image_name+'"').iloc[0, 1]
+        return out_data, int(label), image_name
+
+
+seed = 0
+
+
+def worker_init_fn(worker_id):
+    """ DataLoaderでランダムシードを固定するための設定 """
+    global seed
+
+    random.seed(worker_id+seed)
+    np.random.seed(worker_id+seed)
+
+
+def imagenet_dataloaders(
+        root_dir: str, train_csv_path: str, val_csv_path: str,
+        random_seed: int, batch_size: int
+        ) -> Tuple[DataLoader, DataLoader]:
+    """ ImageNet用DataLoader
+
+    ImageNet用のDataLoader
+
+    Args:
+        root_dir (str): データセットのルートディレクトリ
+        train_csv_path (str): ファイルパスカラム(path)とラベルカラム(label)を持つcsvのパス
+        val_csv_path (str): ファイルパスカラム(path)とラベルカラム(label)を持つcsvのパス
+
+    Returns:
+        Tuple[DataLoader, DataLoader]: dataloaderを返す
+    """
+    global seed
+
+    train_set = IMAGENET(root_dir, train_csv_path)
+    test_set = IMAGENET(root_dir, val_csv_path)
+
+    """ TODO: dataloaderのパラメータ
+
+    バッチサイズは先行研究と同じ値
+    num_workers, pin_memoryはデータを並列に読むための設定
+    worker_init_fn 再現性を保つためにランダムシードを固定
+    """
+    if random_seed:
+        seed = random_seed
+        train_loader = DataLoader(
+            train_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True,
+            worker_init_fn=worker_init_fn)
+        test_loader = DataLoader(
+            test_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True,
+            worker_init_fn=worker_init_fn)
+    else:
+        train_loader = DataLoader(
+            train_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True)
+        test_loader = DataLoader(
+            test_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True)
+
+    return train_loader, test_loader
 
 
 def cifar_10_for_vgg_loaders() -> Tuple[DataLoader, DataLoader]:
