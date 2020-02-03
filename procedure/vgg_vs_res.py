@@ -140,13 +140,14 @@ def save(model, name):
     model.eval()
     """
     """ save predict result """
-    pickle.dump({
-        "val_fnames_list": val_fnames_list,
-        "val_outputs_list": val_outputs_list,
-        "val_epoches_list": val_epoches_list,
-        "train_fnames_list": train_fnames_list,
-        "train_outputs_list": train_outputs_list,
-        "train_epoches_list": train_epoches_list}, name+'.pickle')
+    with open(join(getcwd(), name+'.dump'), 'wb') as f:
+        pickle.dump({
+            "val_fnames_list": val_fnames_list,
+            "val_outputs_list": val_outputs_list,
+            "val_epoches_list": val_epoches_list,
+            "train_fnames_list": train_fnames_list,
+            "train_outputs_list": train_outputs_list,
+            "train_epoches_list": train_epoches_list}, f)
 
 
 val_fnames_list = []
