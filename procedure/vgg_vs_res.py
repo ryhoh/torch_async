@@ -47,14 +47,15 @@ parser.add_argument('--seed', default=0, type=int,
 
 parser.add_argument('--gpu', action='store_true', help='flag for Enable GPU')
 
+args = parser.parse_args()
+model_type = args.convolution + '_' + args.pooling +\
+    '_' + args.fc + '_' + str(args.epochs) + '_' + str(args.batchsize) +\
+    '_' + str(args.lr) + '_' + str(args.momentum) + '_' + str(args.seed)
+writer = SummaryWriter('runs/' + model_type)
+
 
 def main():
-    args = parser.parse_args()
-    model_type = args.convolution + '_' + args.pooling +\
-        '_' + args.fc + '_' + str(args.epochs) + '_' + str(args.batchsize) +\
-        '_' + str(args.lr) + '_' + str(args.momentum) + '_' + str(args.seed)
-    writer = SummaryWriter('runs/' + model_type)
-
+    global args, writer
     ROOT_DIR = "/Volumes/IMAGENET/ImageNet/"
     TRAIN_CSV = "ILSVRC2012_train.csv"
     VAL_CSV = "ILSVRC2012_val.csv"
@@ -85,8 +86,9 @@ def main():
         model = vgg(args.convolution, args.pooling, args.fc).to(device)
 
     # モデルを記録
-    writer.add_graph(model, torch.randn(1, 3, 224, 224))
+    writer.add_graph(model.to('cpu'), torch.randn(1, 3, 224, 224))
     writer.close()
+    model = model.to(device)
 
     # 評価関数
     """ lossはreductionあり/なしを用意する必要がある？
@@ -154,7 +156,7 @@ val_epoches_list = []
 
 def validate(epoch, model, val_loader, criterion, device):
     """ 評価用関数 """
-    global val_fnames_list, val_outputs_list, val_epoches_list
+    global writer, val_fnames_list, val_outputs_list, val_epoches_list
 
     model.eval()
     with torch.no_grad():
@@ -164,8 +166,8 @@ def validate(epoch, model, val_loader, criterion, device):
         accuracy_sum = 0
         for i, (inputs, labels, fnames) in enumerate(val_loader):
             # デバイス用設定
-            inputs.to(device)
-            labels.to(device)
+            inputs = inputs.to(device)
+            labels = labels.to(device)
             # モデルへ適用
             outputs = model(inputs)
             # lossを計算
@@ -214,8 +216,8 @@ def train(epoch, model, train_loader, optimizer, criterion, device):
     accuracy_sum = 0
     for i, (inputs, labels, fnames) in enumerate(train_loader):
         # デバイス用設定
-        inputs.to(device)
-        labels.to(device)
+        inputs = inputs.to(device)
+        labels = labels.to(device)
         # 勾配の初期化
         optimizer.zero_grad()
         # モデルへ適用
