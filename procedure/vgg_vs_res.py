@@ -33,7 +33,7 @@ parser.add_argument('-p', '--pooling', choices=['max', 'average'],
 parser.add_argument('--fc', choices=['none', 'normal', 'semi'],
                     help='full connected type', required=True)
 
-parser.add_argument('--epochs', default=90, type=int, metavar='N',
+parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('-b', '--batchsize', default=32, type=int,
                     metavar='N',
