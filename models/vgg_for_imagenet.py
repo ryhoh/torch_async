@@ -30,12 +30,11 @@ class VGGForImageNet(nn.Module):
         注意: 最後のMaxPoolingを抜いている
         """
         cfgs = {
-            'vgg_with_maxpool': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M',
-                                   512, 512, 512, 'M', 512, 512, 512],
             'vgg_without_maxpool': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M',
+                                   512, 512, 512, 'M', 512, 512, 512],
+            'vgg_with_maxpool': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M',
                                       512, 512, 512, 'M', 512, 512, 512, 'M']
         }
-        
         """ vgg16 """
         self.features = make_layers(cfgs[model_type], batch_norm=False)
 
@@ -47,22 +46,30 @@ class VGGForImageNet(nn.Module):
         else:
             raise ValueError("poolingの値が不正です")
 
+        # maxpoolの有無でinput shapeを変える
+        in_shape = 512 * 1 * 1
+        if model_type == 'vgg_without_maxpool' and pooling == "max":
+            in_shape = 512 * 2 * 2
+        elif model_type == 'vgg_without_maxpool' and pooling == "average":
+            in_shape = 512 * 1 * 1
+
+
         """ apply semi-sync"""
         if sync == "normal":
             self.fc = nn.Sequential(
-                nn.Linear(512 * 1, 128),
+                nn.Linear(in_shape, 128),
                 nn.ReLU(128),
                 nn.Linear(128, num_classes),
             )
         elif sync == "semi":
             self.fc = nn.Sequential(
-                OptimizedSemiSyncLinear(nn.Linear(512 * 1, 128)),
+                OptimizedSemiSyncLinear(nn.Linear(in_shape, 128)),
                 nn.ReLU(128),
                 nn.Linear(128, num_classes),
             )
         elif sync == "none":
             self.fc = nn.Sequential(
-                nn.Linear(512 * 1, 1000),
+                nn.Linear(in_shape, 1000),
             )
         else:
             raise ValueError("syncの値が不正です")
