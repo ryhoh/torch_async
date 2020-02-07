@@ -5,8 +5,9 @@
 データセットはImageNetを使い、1000クラス分類をする
 """
 import _parent
-from os import getcwd
-from os.path import join
+import datetime
+from os import getcwd, makedirs
+from os.path import join, isdir
 import argparse
 import random
 import numpy as np
@@ -48,14 +49,22 @@ parser.add_argument('--seed', default=0, type=int,
 parser.add_argument('--gpu', action='store_true', help='flag for Enable GPU')
 
 args = parser.parse_args()
-model_type = args.convolution + '_' + args.pooling +\
-    '_' + args.fc + '_' + str(args.epochs) + '_' + str(args.batchsize) +\
-    '_' + str(args.lr) + '_' + str(args.momentum) + '_' + str(args.seed)
-writer = SummaryWriter('runs/' + model_type)
+now = datetime.datetime.now()
+model_name = "{}_{}_{}_{}_{}_{}_{}_{}_{}".format(
+    now.strftime("%Y-%m-%d_%H-%M-%S"),
+    args.convolution,
+    args.pooling,
+    args.fc,
+    str(args.epochs),
+    str(args.batchsize),
+    str(args.lr),
+    str(args.momentum),
+    str(args.seed))
+writer = SummaryWriter('runs/' + model_name)
 
 
 def main():
-    global args, writer
+    global args, writer, model_name
 
     ROOT_DIR = "/ImageNet/"
     TRAIN_CSV = "ILSVRC2012_train.csv"
@@ -128,37 +137,51 @@ def main():
         train(epoch, model, train_loader, optimizer, criterion, device)
         validate(epoch, model, val_loader, criterion, device)
     # 学習結果を保存
-    save(model, model_type)
+    save(data=model, name=model_name, type="model")
 
 
-def save(model, name):
-    global val_fnames_list, val_outputs_list, val_epoches_list, train_fnames_list, train_outputs_list, train_epoches_list
-    """ SAVE MODEL"""
-    torch.save(model.state_dict(), join(getcwd(), name+'.model'))
-    """ LOAD
-    model = TheModelClass(*args, **kwargs)
-    model.load_state_dict(torch.load(PATH))
-    model.eval()
+def mkdirs(path):
+    """ ディレクトリが無ければ作る """
+    if not isdir(path):
+        makedirs(path)
+
+
+def save(data, name, type):
+    """ SAVE MODEL
+
+    data: 保存するデータ
+    name: ファイル名
+    type: データのタイプ
     """
-    """ save predict result """
-    with open(join(getcwd(), name+'.dump'), 'wb') as f:
-        pickle.dump({
-            "val_fnames_list": val_fnames_list,
-            "val_outputs_list": val_outputs_list,
-            "val_epoches_list": val_epoches_list,
-            "train_fnames_list": train_fnames_list,
-            "train_outputs_list": train_outputs_list,
-            "train_epoches_list": train_epoches_list}, f)
+    global model_name
+    save_dir = join(getcwd(), "log/" + model_name)
 
+    mkdirs(save_dir)
 
-val_fnames_list = []
-val_outputs_list = []
-val_epoches_list = []
+    if type == "model":
+        """ モデルを保存
+
+        Memo: ロードする方法
+        model = TheModelClass(*args, **kwargs)
+        model.load_state_dict(torch.load(PATH))
+        model.eval()
+        """
+        torch.save(data.state_dict(), join(save_dir, name+'.model'))
+    elif type == "progress":
+        """ 予測の途中経過
+
+        Memo: ロードする方法
+        data = None
+        with open(PATH, 'rb') as f:
+            data = pickle.load(f)
+        """
+        with open(join(save_dir, name+'.dump'), 'wb') as f:
+            pickle.dump(data, f)
 
 
 def validate(epoch, model, val_loader, criterion, device):
     """ 評価用関数 """
-    global writer, val_fnames_list, val_outputs_list, val_epoches_list
+    global writer
 
     model.eval()
     with torch.no_grad():
@@ -197,19 +220,17 @@ def validate(epoch, model, val_loader, criterion, device):
                           accuracy_sum/len(val_loader),
                           epoch)
         # save log
-        val_fnames_list.append(fnames_list)
-        val_outputs_list.append(outputs_list)
-        val_epoches_list.append([[epoch]*len(val_loader)])
-
-
-train_fnames_list = []
-train_outputs_list = []
-train_epoches_list = []
+        d = {
+            "file_names": fnames_list,
+            "outputs": outputs_list
+        }
+        n = "validate_{}".format(epoch)
+        save(data=d, name=n, type="progress")
 
 
 def train(epoch, model, train_loader, optimizer, criterion, device):
     """ 学習用関数 """
-    global writer, train_fnames_list, train_outputs_list, train_epoches_list
+    global writer
 
     model.train()
     fnames_list = []
@@ -253,9 +274,12 @@ def train(epoch, model, train_loader, optimizer, criterion, device):
                       accuracy_sum/len(train_loader),
                       epoch)
     # save log
-    train_fnames_list.append(fnames_list)
-    train_outputs_list.append(outputs_list)
-    train_epoches_list.append([[epoch]*len(train_loader)])
+    d = {
+        "file_names": fnames_list,
+        "outputs": outputs_list
+    }
+    n = "train_{}".format(epoch)
+    save(data=d, name=n, type="progress")
 
 
 if __name__ == '__main__':
