@@ -24,6 +24,7 @@ from models.vgg_for_imagenet import VGGForImageNet as vgg
 from torch.utils.tensorboard import SummaryWriter
 # save list
 import pickle
+import gc
 
 # 引数を受け取る
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
@@ -226,6 +227,9 @@ def validate(epoch, model, val_loader, criterion, device):
         }
         n = "validate_{}".format(epoch)
         save(data=d, name=n, type="progress")
+        del fnames_list
+        del outputs_list
+        gc.collect()
 
 
 def train(epoch, model, train_loader, optimizer, criterion, device):
@@ -280,6 +284,9 @@ def train(epoch, model, train_loader, optimizer, criterion, device):
     }
     n = "train_{}".format(epoch)
     save(data=d, name=n, type="progress")
+    del fnames_list
+    del outputs_list
+    gc.collect()
 
 
 if __name__ == '__main__':
