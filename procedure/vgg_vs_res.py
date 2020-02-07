@@ -56,7 +56,8 @@ writer = SummaryWriter('runs/' + model_type)
 
 def main():
     global args, writer
-    ROOT_DIR = "/Volumes/IMAGENET/ImageNet/"
+
+    ROOT_DIR = "/ImageNet/"
     TRAIN_CSV = "ILSVRC2012_train.csv"
     VAL_CSV = "ILSVRC2012_val.csv"
 
