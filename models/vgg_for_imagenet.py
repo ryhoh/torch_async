@@ -23,7 +23,7 @@ def make_layers(cfg, batch_norm=False):
 
 
 class VGGForImageNet(nn.Module):
-    def __init__(self, model_type='vgg_without_maxpool', num_classes=1000, pooling="average", sync="normal"):
+    def __init__(self, model_type='vgg_without_maxpool', num_classes=100, pooling="average", sync="normal"):
         super(VGGForImageNet, self).__init__()
         """ vgg16のアーキテクチャ(pytorchから引用)
 
@@ -69,7 +69,7 @@ class VGGForImageNet(nn.Module):
             )
         elif sync == "none":
             self.fc = nn.Sequential(
-                nn.Linear(in_shape, 1000),
+                nn.Linear(in_shape, num_classes),
             )
         else:
             raise ValueError("syncの値が不正です")
@@ -81,11 +81,3 @@ class VGGForImageNet(nn.Module):
         x = self.fc(x)
 
         return x
-
-
-""" Usage
-from torchsummary import summary
-
-model = VGGForImageNet()
-summary(model.cuda(), (3, 224, 224))
-"""

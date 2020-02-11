@@ -7,7 +7,7 @@ from layers.static import OptimizedSemiSyncLinear
 
 
 class ResNetForImageNet(nn.Module):
-    def __init__(self, pooling="average", sync="normal"):
+    def __init__(self, pooling="average", num_classes=100, sync="normal"):
         super(ResNetForImageNet, self).__init__()
         """ use resnet18 """
         resnet = models.resnet18(pretrained=False)
@@ -26,17 +26,17 @@ class ResNetForImageNet(nn.Module):
             self.fc = nn.Sequential(
                 nn.Linear(512 * 1, 128),
                 nn.ReLU(128),
-                nn.Linear(128, 1000),
+                nn.Linear(128, num_classes),
             )
         elif sync == "semi":
             self.fc = nn.Sequential(
                 OptimizedSemiSyncLinear(nn.Linear(512 * 1, 128)),
                 nn.ReLU(128),
-                nn.Linear(128, 1000),
+                nn.Linear(128, num_classes),
             )
         elif sync == "none":
             self.fc = nn.Sequential(
-                nn.Linear(512 * 1, 1000),
+                nn.Linear(512 * 1, num_classes),
             )
         else:
             raise ValueError("syncの値が不正です")
@@ -47,11 +47,3 @@ class ResNetForImageNet(nn.Module):
         x = torch.flatten(x, 1)
         x = self.fc(x)
         return x
-
-
-""" Usage
-from torchsummary import summary
-
-model = ResNetForImageNet(pooling="max", sync="semi")
-summary(model.cuda(), (3, 224, 224))
-"""

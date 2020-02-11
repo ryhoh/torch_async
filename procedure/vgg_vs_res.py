@@ -2,7 +2,7 @@
 順同期式更新をresnetに適用して、このパラメータ更新手法が他のモデルにおいても有効であることを示す。
 先行研究で用いられていたvggについても実験をする。
 
-データセットはImageNetを使い、1000クラス分類をする
+データセットはImageNetを使い、100クラス分類をする
 """
 import _parent
 import datetime
@@ -68,8 +68,12 @@ def main():
     global args, writer, model_name
 
     ROOT_DIR = "/ImageNet/"
-    TRAIN_CSV = "ILSVRC2012_train.csv"
-    VAL_CSV = "ILSVRC2012_val.csv"
+    # # original ImageNet
+    # TRAIN_CSV = "ILSVRC2012_train.csv"
+    # VAL_CSV = "ILSVRC2012_val.csv"
+    # ImageNet for 100 class
+    TRAIN_CSV = "imagenet_100_train.csv"
+    VAL_CSV = "imagenet_100_val.csv"
 
     # ランダムシード
     if args.seed is not None:
@@ -90,7 +94,7 @@ def main():
 
     # モデル
     if args.convolution == 'resnet':
-        model = resnet(args.pooling, args.fc).to(device)
+        model = resnet(pooling=args.pooling, sync=args.fc).to(device)
     elif args.convolution == 'vgg_without_maxpool':
         model = vgg(model_type=args.convolution, pooling=args.pooling, sync=args.fc).to(device)
     elif args.convolution == 'vgg_with_maxpool':
