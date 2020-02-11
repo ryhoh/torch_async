@@ -1,0 +1,17 @@
+# change below variable
+- MEMORY
+- GPU_ID
+
+version: '2.3'
+services:
+  batch:
+    build: .
+    shm_size: {MEMORY}g
+    volumes:
+      - ../:/work
+      - /home/sekiya/Desktop/sekiya/IMAGENET/ImageNet/:/ImageNet
+    working_dir: /work
+    runtime: nvidia
+    tty: true
+    environment:
+      - NVIDIA_VISIBLE_DEVICES={GPU_ID}

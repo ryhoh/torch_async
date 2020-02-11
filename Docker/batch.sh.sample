@@ -1,0 +1,21 @@
+# change below variable
+- MODEL
+- TOKEN
+
+
+#!/bin/bash
+python procedure/vgg_vs_res.py --convolution {MODEL} --pooling average --fc none --gpu
+
+python procedure/vgg_vs_res.py --convolution {MODEL} --pooling average --fc normal --gpu
+
+python procedure/vgg_vs_res.py --convolution {MODEL} --pooling average --fc semi --gpu
+
+python procedure/vgg_vs_res.py --convolution {MODEL} --pooling max --fc none --gpu
+
+python procedure/vgg_vs_res.py --convolution {MODEL} --pooling max --fc normal --gpu
+
+python procedure/vgg_vs_res.py --convolution {MODEL} --pooling max --fc semi --gpu
+
+curl -X POST \
+-H 'Authorization: Bearer {TOKEN}' \
+-F 'message={MODEL}の分析が終わったよ' https://notify-api.line.me/api/notify

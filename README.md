@@ -1,21 +1,14 @@
 # torch_async
-非同期による重み付け更新手法の提案研究のソースコード
+他モデル適用　検証用ブランチ
 
-## Introduction
-新規メンバー向けテキスト
+## Usage
+```
+    $ cd Docker
 
-## Installation
+    $ mv batch.sh.sample batch.sh
+    $ mv container.yml.sample container.yml
+
+    $ rm nohup.out
+
+    $ nohup sudo docker-compose -f container.yml run --rm -T --name `uuidgen` batch Docker/batch.sh > nohup.log &
 ```
-  $ cd Docker
-  # コンテナを起動
-  $ docker-compose up -d
-  # 出力先のポート番号を確認
-  $ docker-compose ps
-  #     Name                  Command               State            Ports         
-  # -------------------------------------------------------------------------------
-  # docker_app_1   jupyter-lab --no-browser - ...   Up      0.0.0.0:32770->8080/tcp
-  #                                                       ここの番号↑
-```
-**`localhost:ポート番号` にアクセスするとjupyterにつながります**
-## Tutorial
-jupyterで`Tutorial.ipynb`を開く
