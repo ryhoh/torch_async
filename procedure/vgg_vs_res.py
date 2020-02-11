@@ -25,6 +25,8 @@ from torch.utils.tensorboard import SummaryWriter
 # save list
 import pickle
 import gc
+# debug
+from torchsummary import summary
 
 # 引数を受け取る
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
@@ -48,20 +50,22 @@ parser.add_argument('--seed', default=0, type=int,
                     help='seed for initializing training. ')
 
 parser.add_argument('--gpu', action='store_true', help='flag for Enable GPU')
+parser.add_argument('--debug', action='store_true', help='flag for Show Model Summary')
 
 args = parser.parse_args()
 now = datetime.datetime.now()
-model_name = "{}_{}_{}_{}_{}_{}_{}_{}_{}".format(
-    now.strftime("%Y-%m-%d_%H-%M-%S"),
-    args.convolution,
-    args.pooling,
-    args.fc,
-    str(args.epochs),
-    str(args.batchsize),
-    str(args.lr),
-    str(args.momentum),
-    str(args.seed))
-writer = SummaryWriter('runs/' + model_name)
+if not args.debug:
+    model_name = "{}_{}_{}_{}_{}_{}_{}_{}_{}".format(
+        now.strftime("%Y-%m-%d_%H-%M-%S"),
+        args.convolution,
+        args.pooling,
+        args.fc,
+        str(args.epochs),
+        str(args.batchsize),
+        str(args.lr),
+        str(args.momentum),
+        str(args.seed))
+    writer = SummaryWriter('runs/' + model_name)
 
 
 def main():
@@ -99,6 +103,11 @@ def main():
         model = vgg(model_type=args.convolution, pooling=args.pooling, sync=args.fc).to(device)
     elif args.convolution == 'vgg_with_maxpool':
         model = vgg(model_type=args.convolution, pooling=args.pooling, sync=args.fc).to(device)
+
+    # DEBUG
+    if args.debug:
+        summary(model, (3, 244, 244))
+        exit()
 
     # モデルを記録
     writer.add_graph(model.to('cpu'), torch.randn(1, 3, 224, 224))
