@@ -1,17 +1,23 @@
-import torchvision.models as models
 import torch
 import torch.nn as nn
+from torchvision.models import vgg as vggmodel
 
 # 準同期式レイヤ
 from layers.static import OptimizedSemiSyncLinear
 
 
-class ResNetForImageNet(nn.Module):
-    def __init__(self, pooling="average", num_classes=100, poolingshape=1, middleshape=4096, sync="normal"):
-        super(ResNetForImageNet, self).__init__()
-        """ use resnet18 """
-        resnet = models.resnet18(pretrained=False)
-        self.resnet = nn.Sequential(*list(resnet.children())[:-2])
+class VGGForImageNet(nn.Module):
+    def __init__(self, num_classes=100, model_type="vgg_without_maxpool", pooling="average", poolingshape=1, middleshape=4096, sync="normal"):
+        super(VGGForImageNet, self).__init__()
+
+        cfgs = {
+            'vgg_with_maxpool': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
+            'vgg_without_maxpool': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512],
+        }
+
+        """ vgg16 """
+        vgg = vggmodel.VGG(vggmodel.make_layers(cfgs[model_type], batch_norm=False))
+        self.vgg = nn.Sequential(*list(vgg.children())[:-2])
 
         """ global average pooling or Max Pooling """
         if pooling == "average":
@@ -43,8 +49,9 @@ class ResNetForImageNet(nn.Module):
             raise ValueError("syncの値が不正です")
 
     def forward(self, x):
-        x = self.resnet(x)
+        x = self.vgg(x)
         x = self.pool(x)
         x = torch.flatten(x, 1)
         x = self.fc(x)
+
         return x

@@ -19,7 +19,7 @@ from torch.optim import SGD
 import preprocess
 # モデル
 from models.resnet_for_imagenet import ResNetForImageNet as resnet
-from models.vgg_for_imagenet import VGGForImageNet as vgg
+from models.vgg_for_imagenet_v3 import VGGForImageNet as vggv3
 # tensorboard
 from torch.utils.tensorboard import SummaryWriter
 # save list
@@ -34,8 +34,12 @@ parser.add_argument('--convolution', choices=['resnet', 'vgg_with_maxpool', 'vgg
                     help='convolution type', required=True)
 parser.add_argument('-p', '--pooling', choices=['max', 'average'],
                     help='pooling method', required=True)
+parser.add_argument('--ps', default=1, type=int,
+                    help='pooling shape', required=True)
 parser.add_argument('--fc', choices=['none', 'normal', 'semi'],
                     help='full connected type', required=True)
+parser.add_argument('--ms', default=4096, type=int,
+                    help='middle layer shape', required=True)
 
 parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
@@ -55,11 +59,13 @@ parser.add_argument('--debug', action='store_true', help='flag for Show Model Su
 args = parser.parse_args()
 now = datetime.datetime.now()
 if not args.debug:
-    model_name = "{}_{}_{}_{}_{}_{}_{}_{}_{}".format(
+    model_name = "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(
         now.strftime("%Y-%m-%d_%H-%M-%S"),
         args.convolution,
         args.pooling,
+        str(args.ps),
         args.fc,
+        str(args.ms),
         str(args.epochs),
         str(args.batchsize),
         str(args.lr),
@@ -98,11 +104,25 @@ def main():
 
     # モデル
     if args.convolution == 'resnet':
-        model = resnet(pooling=args.pooling, sync=args.fc).to(device)
+        model = resnet(
+            pooling=args.pooling,
+            poolingshape=args.ps,
+            sync=args.fc,
+            middleshape=args.ms).to(device)
     elif args.convolution == 'vgg_without_maxpool':
-        model = vgg(model_type=args.convolution, pooling=args.pooling, sync=args.fc).to(device)
+        model = vggv3(
+            model_type=args.convolution,
+            pooling=args.pooling,
+            poolingshape=args.ps,
+            sync=args.fc,
+            middleshape=args.ms).to(device)
     elif args.convolution == 'vgg_with_maxpool':
-        model = vgg(model_type=args.convolution, pooling=args.pooling, sync=args.fc).to(device)
+        model = vggv3(
+            model_type=args.convolution,
+            pooling=args.pooling,
+            poolingshape=args.ps,
+            sync=args.fc,
+            middleshape=args.ms).to(device)
 
     # DEBUG
     if args.debug:
