@@ -139,7 +139,9 @@ def main():
 
     reduction='mean'(pytorchのデフォルト値)にする
     """
-    criterion = CrossEntropyLoss().to(device)
+    criterion_mean = CrossEntropyLoss().to(device)
+    criterion_sum = CrossEntropyLoss(reduction='sum').to(device)
+
 
     # パラメータ更新手法
     """ SGDのパラメータを設定するか？
@@ -164,12 +166,12 @@ def main():
         )
 
     # 評価
-    validate(-1, model, val_loader, criterion, device)
+    validate(-1, model, val_loader, criterion_mean, criterion_sum, device)
 
     # 学習
     for epoch in range(args.epochs):
-        train(epoch, model, train_loader, optimizer, criterion, device)
-        validate(epoch, model, val_loader, criterion, device)
+        train(epoch, model, train_loader, optimizer, criterion_mean, criterion_sum, device)
+        validate(epoch, model, val_loader, criterion_mean, criterion_sum, device)
     # 学習結果を保存
     save(data=model, name=model_name, type="model")
 
@@ -213,7 +215,7 @@ def save(data, name, type):
             pickle.dump(data, f)
 
 
-def validate(epoch, model, val_loader, criterion, device):
+def validate(epoch, model, val_loader, criterion_mean, criterion_sum, device):
     """ 評価用関数 """
     global writer
 
@@ -223,6 +225,7 @@ def validate(epoch, model, val_loader, criterion, device):
         outputs_list = []
         loss_sum = 0
         accuracy_sum = 0
+        item_counter = 0
         for i, (inputs, labels, fnames) in enumerate(val_loader):
             # デバイス用設定
             inputs = inputs.to(device)
@@ -230,12 +233,16 @@ def validate(epoch, model, val_loader, criterion, device):
             # モデルへ適用
             outputs = model(inputs)
             # lossを計算
-            loss = criterion(outputs, labels)
-            loss_sum += loss.item()
+            # criterion_meanはbackprop/update用
+            loss = criterion_mean(outputs, labels).item()
+            # criterion_sumはログ記録用
+            loss_sum += criterion_sum(outputs, labels).item()
             # accuracyを計算
             _, argmax = torch.max(outputs, 1)
-            accuracy = (labels == argmax.squeeze()).float().mean()
+            accuracy = (labels == argmax.squeeze()).float().sum().item()
             accuracy_sum += accuracy
+            # 画像数
+            item_counter += len(outputs)
             # log
             fnames_list.append(fnames)
             outputs_list.append(outputs.to('cpu'))
@@ -245,13 +252,13 @@ def validate(epoch, model, val_loader, criterion, device):
                   'Accuracy: {accuracy:.3f}'.format(
                       i, len(val_loader),
                       loss=loss,
-                      accuracy=accuracy))
+                      accuracy=accuracy/len(outputs)))
         # output log to tensorboard
         writer.add_scalar('validate loss',
-                          loss_sum/len(val_loader),
+                          loss_sum/item_counter,
                           epoch)
         writer.add_scalar('validate Accuracy',
-                          accuracy_sum/len(val_loader),
+                          accuracy_sum/item_counter,
                           epoch)
         # save log
         d = {
@@ -265,7 +272,7 @@ def validate(epoch, model, val_loader, criterion, device):
         gc.collect()
 
 
-def train(epoch, model, train_loader, optimizer, criterion, device):
+def train(epoch, model, train_loader, optimizer, criterion_mean, criterion_sum, device):
     """ 学習用関数 """
     global writer
 
@@ -274,6 +281,7 @@ def train(epoch, model, train_loader, optimizer, criterion, device):
     outputs_list = []
     loss_sum = 0
     accuracy_sum = 0
+    item_counter = 0
     for i, (inputs, labels, fnames) in enumerate(train_loader):
         # デバイス用設定
         inputs = inputs.to(device)
@@ -283,12 +291,16 @@ def train(epoch, model, train_loader, optimizer, criterion, device):
         # モデルへ適用
         outputs = model(inputs)
         # lossを計算
-        loss = criterion(outputs, labels)
-        loss_sum += loss.item()
+        # criterion_meanはbackprop/update用
+        loss = criterion_mean(outputs, labels).item()
+        # criterion_sumはログ記録用
+        loss_sum += criterion_sum(outputs, labels).item()
         # accuracyを計算
         _, argmax = torch.max(outputs, 1)
-        accuracy = (labels == argmax.squeeze()).float().mean()
+        accuracy = (labels == argmax.squeeze()).float().sum().item()
         accuracy_sum += accuracy
+        # 画像数
+        item_counter += len(outputs)
         # 逆伝播
         loss.backward()
         # パラメータ更新
@@ -301,14 +313,14 @@ def train(epoch, model, train_loader, optimizer, criterion, device):
               'Loss {loss:.4f}\t'
               'Accuracy: {accuracy:.3f}'.format(
                epoch, i, len(train_loader),
-               loss=loss.item(),
-               accuracy=accuracy))
+               loss=loss,
+               accuracy=accuracy/len(outputs)))
     # output log to tensorboard
     writer.add_scalar('train loss',
-                      loss_sum/len(train_loader),
+                      loss_sum/item_counter,
                       epoch)
     writer.add_scalar('train Accuracy',
-                      accuracy_sum/len(train_loader),
+                      accuracy_sum/item_counter,
                       epoch)
     # save log
     d = {
