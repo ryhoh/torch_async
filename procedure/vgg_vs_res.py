@@ -234,7 +234,7 @@ def validate(epoch, model, val_loader, criterion_mean, criterion_sum, device):
             outputs = model(inputs)
             # lossを計算
             # criterion_meanはbackprop/update用
-            loss = criterion_mean(outputs, labels).item()
+            loss = criterion_mean(outputs, labels)
             # criterion_sumはログ記録用
             loss_sum += criterion_sum(outputs, labels).item()
             # accuracyを計算
@@ -251,7 +251,7 @@ def validate(epoch, model, val_loader, criterion_mean, criterion_sum, device):
                   'Loss: {loss:.3f}\t'
                   'Accuracy: {accuracy:.3f}'.format(
                       i, len(val_loader),
-                      loss=loss,
+                      loss=loss.item(),
                       accuracy=accuracy/len(outputs)))
         # output log to tensorboard
         writer.add_scalar('validate loss',
@@ -292,7 +292,7 @@ def train(epoch, model, train_loader, optimizer, criterion_mean, criterion_sum, 
         outputs = model(inputs)
         # lossを計算
         # criterion_meanはbackprop/update用
-        loss = criterion_mean(outputs, labels).item()
+        loss = criterion_mean(outputs, labels)
         # criterion_sumはログ記録用
         loss_sum += criterion_sum(outputs, labels).item()
         # accuracyを計算
@@ -313,7 +313,7 @@ def train(epoch, model, train_loader, optimizer, criterion_mean, criterion_sum, 
               'Loss {loss:.4f}\t'
               'Accuracy: {accuracy:.3f}'.format(
                epoch, i, len(train_loader),
-               loss=loss,
+               loss=loss.item(),
                accuracy=accuracy/len(outputs)))
     # output log to tensorboard
     writer.add_scalar('train loss',
