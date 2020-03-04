@@ -19,7 +19,7 @@ from torch.optim import SGD
 import preprocess
 # モデル
 from models.resnet_for_imagenet import ResNetForImageNet as resnet
-from models.vgg_for_imagenet_v3 import VGGForImageNet as vggv3
+from models.vgg_for_imagenet import VGGForImageNet as vgg
 # tensorboard
 from torch.utils.tensorboard import SummaryWriter
 # save list
@@ -110,14 +110,14 @@ def main():
             sync=args.fc,
             middleshape=args.ms).to(device)
     elif args.convolution == 'vgg_without_maxpool':
-        model = vggv3(
+        model = vgg(
             model_type=args.convolution,
             pooling=args.pooling,
             poolingshape=args.ps,
             sync=args.fc,
             middleshape=args.ms).to(device)
     elif args.convolution == 'vgg_with_maxpool':
-        model = vggv3(
+        model = vgg(
             model_type=args.convolution,
             pooling=args.pooling,
             poolingshape=args.ps,
