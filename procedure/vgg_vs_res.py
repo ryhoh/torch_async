@@ -38,6 +38,8 @@ parser.add_argument('--ps', default=1, type=int,
                     help='pooling shape', required=True)
 parser.add_argument('--fc', choices=['none', 'normal', 'semi', 'normal-dropout', 'semi-dropout'],
                     help='full connected type', required=True)
+parser.add_argument('--fcout', default=100, type=int, metavar='N',
+                    help='number of output shape of fc')
 parser.add_argument('--ms', default=4096, type=int,
                     help='middle layer shape', required=True)
 
@@ -108,21 +110,24 @@ def main():
             pooling=args.pooling,
             poolingshape=args.ps,
             sync=args.fc,
-            middleshape=args.ms).to(device)
+            middleshape=args.ms,
+            num_classes=args.fcout).to(device)
     elif args.convolution == 'vgg_without_maxpool':
         model = vgg(
             model_type=args.convolution,
             pooling=args.pooling,
             poolingshape=args.ps,
             sync=args.fc,
-            middleshape=args.ms).to(device)
+            middleshape=args.ms,
+            num_classes=args.fcout).to(device)
     elif args.convolution == 'vgg_with_maxpool':
         model = vgg(
             model_type=args.convolution,
             pooling=args.pooling,
             poolingshape=args.ps,
             sync=args.fc,
-            middleshape=args.ms).to(device)
+            middleshape=args.ms,
+            num_classes=args.fcout).to(device)
 
     # DEBUG
     if args.debug:
