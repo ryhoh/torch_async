@@ -53,7 +53,7 @@ parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
 parser.add_argument('--seed', default=0, type=int,
                     help='seed for initializing training. ')
 
-parser.add_argument('--classnum', choices=[10, 50, 100, 200],
+parser.add_argument('--classnum', default=100, type=int,
                     help="class num", required=True)
 
 parser.add_argument('--gpu', action='store_true', help='flag for Enable GPU')
