@@ -1,0 +1,15 @@
+version: '2.3'
+services:
+  batch:
+    build:
+      context: .
+      dockerfile: Dockerfile-Apex
+    shm_size: 32g
+    volumes:
+      - ../:/work
+      - /home/sekiya/Desktop/sekiya/IMAGENET/ImageNet/:/ImageNet
+    working_dir: /work
+    runtime: nvidia
+    tty: true
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=1
