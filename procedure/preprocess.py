@@ -1,7 +1,7 @@
 from typing import Tuple
 from PIL import Image
 from torch.utils.data import DataLoader
-from torchvision.datasets import CIFAR10, MNIST, FashionMNIST
+from torchvision.datasets import CIFAR10, CIFAR100, MNIST, FashionMNIST
 from torchvision import transforms
 from torch.utils.data import Dataset
 import pandas as pd
@@ -69,6 +69,64 @@ def worker_init_fn(worker_id):
     np.random.seed(worker_id+seed)
 
 
+def imagenet_n_dataloaders(
+        root_dir: str, train_csv_path: str, val_csv_path: str,
+        a_csv_path: str, random_seed: int, batch_size: int
+        ) -> Tuple[DataLoader, DataLoader, DataLoader]:
+    """ ImageNet (Class数を増やすと学習の過程がどう変化するかをチェック)
+    """
+    global seed
+
+    train_set = IMAGENET(root_dir, train_csv_path)
+    test_set = IMAGENET(root_dir, val_csv_path)
+    a_set = IMAGENET(root_dir, a_csv_path)
+
+    if random_seed:
+        seed = random_seed
+        train_loader = DataLoader(
+            train_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True,
+            worker_init_fn=worker_init_fn)
+        test_loader = DataLoader(
+            test_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True,
+            worker_init_fn=worker_init_fn)
+        a_loader = DataLoader(
+            a_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True,
+            worker_init_fn=worker_init_fn)
+    else:
+        train_loader = DataLoader(
+            train_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True)
+        test_loader = DataLoader(
+            test_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True)
+        a_loader = DataLoader(
+            a_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True)
+
+    return train_loader, test_loader, a_loader
+
+
 def imagenet_dataloaders(
         root_dir: str, train_csv_path: str, val_csv_path: str,
         random_seed: int, batch_size: int
@@ -96,6 +154,104 @@ def imagenet_dataloaders(
     num_workers, pin_memoryはデータを並列に読むための設定
     worker_init_fn 再現性を保つためにランダムシードを固定
     """
+    if random_seed:
+        seed = random_seed
+        train_loader = DataLoader(
+            train_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True,
+            worker_init_fn=worker_init_fn)
+        test_loader = DataLoader(
+            test_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True,
+            worker_init_fn=worker_init_fn)
+    else:
+        train_loader = DataLoader(
+            train_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True)
+        test_loader = DataLoader(
+            test_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True)
+
+    return train_loader, test_loader
+
+
+def cifar10_dataloader(random_seed: int, batch_size: int) -> Tuple[DataLoader, DataLoader]:
+    global seed
+    # テンソル化, RGB毎に平均と標準偏差を用いて正規化
+    transform = transforms.Compose([
+        # VGGは元々ImageNetを想定しているので、cifarをリサイズする
+        transforms.Resize((224, 224), interpolation=Image.BICUBIC),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
+
+    # data_sets
+    train_set = CIFAR10(root='./data', train=True,
+                        download=True, transform=transform)
+    test_set = CIFAR10(root='./data', train=False,
+                       download=True, transform=transform)
+
+    if random_seed:
+        seed = random_seed
+        train_loader = DataLoader(
+            train_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True,
+            worker_init_fn=worker_init_fn)
+        test_loader = DataLoader(
+            test_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True,
+            worker_init_fn=worker_init_fn)
+    else:
+        train_loader = DataLoader(
+            train_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True)
+        test_loader = DataLoader(
+            test_set,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True)
+
+    return train_loader, test_loader
+
+
+def cifar100_dataloader(random_seed: int, batch_size: int) -> Tuple[DataLoader, DataLoader]:
+    global seed
+    # テンソル化, RGB毎に平均と標準偏差を用いて正規化
+    transform = transforms.Compose([
+        # VGGは元々ImageNetを想定しているので、cifarをリサイズする
+        transforms.Resize((224, 224), interpolation=Image.BICUBIC),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
+
+    # data_sets
+    train_set = CIFAR100(root='./data', train=True,
+                         download=True, transform=transform)
+    test_set = CIFAR100(root='./data', train=False,
+                        download=True, transform=transform)
+
     if random_seed:
         seed = random_seed
         train_loader = DataLoader(
