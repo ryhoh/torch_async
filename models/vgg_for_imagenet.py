@@ -7,7 +7,10 @@ from layers.static import OptimizedSemiSyncLinear
 
 
 class VGGForImageNet(nn.Module):
-    def __init__(self, num_classes=100, model_type="vgg_without_maxpool", pooling="average", poolingshape=1, middleshape=4096, sync="normal"):
+    def __init__(self,
+                 num_classes=100, model_type="vgg_without_maxpool",
+                 pooling="average", poolingshape=1, middleshape=4096,
+                 sync="normal", dropout_prob=0.5):
         super(VGGForImageNet, self).__init__()
 
         cfgs = {
@@ -44,6 +47,20 @@ class VGGForImageNet(nn.Module):
         elif sync == "none":
             self.fc = nn.Sequential(
                 nn.Linear(in_shape, num_classes),
+            )
+        elif sync == "normal-dropout":
+            self.fc = nn.Sequential(
+                nn.Linear(in_shape, middleshape),
+                nn.ReLU(middleshape),
+                nn.dropout(p=dropout_prob),
+                nn.Linear(middleshape, num_classes),
+            )
+        elif sync == "semi-dropout":
+            self.fc = nn.Sequential(
+                OptimizedSemiSyncLinear(nn.Linear(in_shape, middleshape)),
+                nn.ReLU(middleshape),
+                nn.dropout(p=dropout_prob),
+                nn.Linear(middleshape, num_classes),
             )
         else:
             raise ValueError("syncの値が不正です")

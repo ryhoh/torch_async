@@ -36,7 +36,7 @@ parser.add_argument('-p', '--pooling', choices=['max', 'average'],
                     help='pooling method', required=True)
 parser.add_argument('--ps', default=1, type=int,
                     help='pooling shape', required=True)
-parser.add_argument('--fc', choices=['none', 'normal', 'semi'],
+parser.add_argument('--fc', choices=['none', 'normal', 'semi', 'normal-dropout', 'semi-dropout'],
                     help='full connected type', required=True)
 parser.add_argument('--ms', default=4096, type=int,
                     help='middle layer shape', required=True)
