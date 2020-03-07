@@ -45,14 +45,14 @@ class ResNetForImageNet(nn.Module):
             self.fc = nn.Sequential(
                 nn.Linear(in_shape, middleshape),
                 nn.ReLU(middleshape),
-                nn.dropout(p=dropout_prob),
+                nn.Dropout(p=dropout_prob),
                 nn.Linear(middleshape, num_classes),
             )
         elif sync == "semi-dropout":
             self.fc = nn.Sequential(
                 OptimizedSemiSyncLinear(nn.Linear(in_shape, middleshape)),
                 nn.ReLU(middleshape),
-                nn.dropout(p=dropout_prob),
+                nn.Dropout(p=dropout_prob),
                 nn.Linear(middleshape, num_classes),
             )
         else:
