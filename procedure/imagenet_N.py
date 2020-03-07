@@ -88,7 +88,7 @@ def main():
     # ImageNet for 100 class
     TRAIN_CSV = "csvs/imagenet_train_{}.csv".format(args.classnum)
     VAL_CSV = "csvs/imagenet_val_{}.csv".format(args.classnum)
-    A_CSV = "csvs/imagenet_a_{}".format(args.classnum)
+    A_CSV = "csvs/imagenet_a_{}.csv".format(args.classnum)
 
     # ランダムシード
     if args.seed is not None:

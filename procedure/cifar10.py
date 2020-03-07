@@ -213,12 +213,11 @@ def validate(epoch, model, val_loader, criterion_mean, criterion_sum, device):
 
     model.eval()
     with torch.no_grad():
-        fnames_list = []
         outputs_list = []
         loss_sum = 0
         accuracy_sum = 0
         item_counter = 0
-        for i, (inputs, labels, fnames) in enumerate(val_loader):
+        for i, (inputs, labels) in enumerate(val_loader):
             # デバイス用設定
             inputs = inputs.to(device)
             labels = labels.to(device)
@@ -235,8 +234,6 @@ def validate(epoch, model, val_loader, criterion_mean, criterion_sum, device):
             accuracy_sum += accuracy
             # 画像数
             item_counter += len(outputs)
-            # log
-            fnames_list.append(fnames)
             outputs_list.append(outputs.to('cpu'))
             # debug
             print('progress: [{0}/{1}]\t'
@@ -254,12 +251,10 @@ def validate(epoch, model, val_loader, criterion_mean, criterion_sum, device):
                           epoch)
         # save log
         d = {
-            "file_names": fnames_list,
             "outputs": outputs_list
         }
         n = "validate_{}".format(epoch)
         save(data=d, name=n, type="progress")
-        del fnames_list
         del outputs_list
         gc.collect()
 
@@ -269,12 +264,11 @@ def train(epoch, model, train_loader, optimizer, criterion_mean, criterion_sum, 
     global writer
 
     model.train()
-    fnames_list = []
     outputs_list = []
     loss_sum = 0
     accuracy_sum = 0
     item_counter = 0
-    for i, (inputs, labels, fnames) in enumerate(train_loader):
+    for i, (inputs, labels) in enumerate(train_loader):
         # デバイス用設定
         inputs = inputs.to(device)
         labels = labels.to(device)
@@ -298,7 +292,6 @@ def train(epoch, model, train_loader, optimizer, criterion_mean, criterion_sum, 
         # パラメータ更新
         optimizer.step()
         # log
-        fnames_list.append(fnames)
         outputs_list.append(outputs.to('cpu'))
         # debug
         print('Epoch: [{0}][{1}/{2}]\t'
@@ -316,12 +309,10 @@ def train(epoch, model, train_loader, optimizer, criterion_mean, criterion_sum, 
                       epoch)
     # save log
     d = {
-        "file_names": fnames_list,
         "outputs": outputs_list
     }
     n = "train_{}".format(epoch)
     save(data=d, name=n, type="progress")
-    del fnames_list
     del outputs_list
     gc.collect()
 
