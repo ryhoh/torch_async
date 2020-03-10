@@ -175,7 +175,7 @@ def main():
 
     # 評価
     validate(-1, model, val_loader, criterion_mean, criterion_sum, device)
-    validate_a(-1, model, val_loader, criterion_mean, criterion_sum, device)
+    validate_a(-1, model, a_loader, criterion_mean, criterion_sum, device)
 
     # 学習
     for epoch in range(args.epochs):
