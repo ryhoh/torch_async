@@ -214,6 +214,7 @@ def validate(epoch, model, val_loader, criterion_mean, criterion_sum, device):
     model.eval()
     with torch.no_grad():
         outputs_list = []
+        answers_list = []
         loss_sum = 0
         accuracy_sum = 0
         item_counter = 0
@@ -234,7 +235,9 @@ def validate(epoch, model, val_loader, criterion_mean, criterion_sum, device):
             accuracy_sum += accuracy
             # 画像数
             item_counter += len(outputs)
+            # ログ出力
             outputs_list.append(outputs.to('cpu'))
+            answers_list.append(labels.to('cpu'))
             # debug
             print('progress: [{0}/{1}]\t'
                   'Loss: {loss:.3f}\t'
@@ -251,11 +254,13 @@ def validate(epoch, model, val_loader, criterion_mean, criterion_sum, device):
                           epoch)
         # save log
         d = {
-            "outputs": outputs_list
+            "outputs": outputs_list,
+            "answers": answers_list
         }
         n = "validate_{}".format(epoch)
         save(data=d, name=n, type="progress")
         del outputs_list
+        del answers_list
         gc.collect()
 
 
@@ -265,6 +270,7 @@ def train(epoch, model, train_loader, optimizer, criterion_mean, criterion_sum, 
 
     model.train()
     outputs_list = []
+    answers_list = []
     loss_sum = 0
     accuracy_sum = 0
     item_counter = 0
@@ -293,6 +299,7 @@ def train(epoch, model, train_loader, optimizer, criterion_mean, criterion_sum, 
         optimizer.step()
         # log
         outputs_list.append(outputs.to('cpu'))
+        answers_list.append(labels.to('cpu'))
         # debug
         print('Epoch: [{0}][{1}/{2}]\t'
               'Loss {loss:.4f}\t'
@@ -309,11 +316,13 @@ def train(epoch, model, train_loader, optimizer, criterion_mean, criterion_sum, 
                       epoch)
     # save log
     d = {
-        "outputs": outputs_list
+        "outputs": outputs_list,
+        "answers": answers_list
     }
     n = "train_{}".format(epoch)
     save(data=d, name=n, type="progress")
     del outputs_list
+    del answers_list
     gc.collect()
 
 
