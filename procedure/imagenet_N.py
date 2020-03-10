@@ -27,6 +27,8 @@ import pickle
 import gc
 # debug
 from torchsummary import summary
+# 通知
+from notify import send
 
 # 引数を受け取る
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
@@ -85,7 +87,7 @@ def main():
     # # original ImageNet
     # TRAIN_CSV = "ILSVRC2012_train.csv"
     # VAL_CSV = "ILSVRC2012_val.csv"
-    # ImageNet for 100 class
+    # ImageNet-A
     TRAIN_CSV = "csvs/imagenet_train_{}.csv".format(args.classnum)
     VAL_CSV = "csvs/imagenet_val_{}.csv".format(args.classnum)
     A_CSV = "csvs/imagenet_a_{}.csv".format(args.classnum)
@@ -178,12 +180,18 @@ def main():
     validate_a(-1, model, a_loader, criterion_mean, criterion_sum, device)
 
     # 学習
+    val_acc = 0
     for epoch in range(args.epochs):
         train(epoch, model, train_loader, optimizer, criterion_mean, criterion_sum, device)
-        validate(epoch, model, val_loader, criterion_mean, criterion_sum, device)
-        validate_a(-1, model, val_loader, criterion_mean, criterion_sum, device)
+        val_acc = validate(epoch, model, val_loader, criterion_mean, criterion_sum, device)
+        validate_a(epoch, model, a_loader, criterion_mean, criterion_sum, device)
     # 学習結果を保存
     save(data=model, name=model_name, type="model")
+    # normalの場合は通知を送る
+    if args.fc == "normal":
+        msg = "MODEL:{}_{}_{} VAL_ACC:{}".format(
+            args.convolution, args.pooling, args.fc, val_acc)
+        send(msg)
 
 
 def mkdirs(path):
@@ -337,6 +345,7 @@ def validate(epoch, model, val_loader, criterion_mean, criterion_sum, device):
         del fnames_list
         del outputs_list
         gc.collect()
+        return accuracy_sum/item_counter
 
 
 def train(epoch, model, train_loader, optimizer, criterion_mean, criterion_sum, device):
