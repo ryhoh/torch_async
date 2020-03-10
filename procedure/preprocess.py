@@ -43,7 +43,8 @@ class IMAGENET(Dataset):
         self._df = pd.read_csv(csv_path)
         self.root_dir = root_dir
         # csvから画像一覧を読み出す
-        self.images = self._df['path'].values.tolist()
+        self.images = self._df['path'].values
+        self.labels = self._df['label'].values
 
     def __len__(self):
         return len(self.images)
@@ -54,7 +55,7 @@ class IMAGENET(Dataset):
         image = image.convert("RGB")
         if self.transforms:
             out_data = self.transforms(image)
-        label = self._df.query('path=="'+image_name+'"').iloc[0, 1]
+        label = self.labels[idx]
         return out_data, int(label), image_name
 
 
