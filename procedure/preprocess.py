@@ -26,15 +26,14 @@ class IMAGENET(Dataset):
     Args:
         root_dir (str): データセットのルートディレクトリ
         csv_path (str): ファイルパスカラム(path)とラベルカラム(label)を持つcsv
+
+    Note:
+        水増しやrandomcropとrandomflipの前処理なし
     """
     def __init__(self, root_dir: str, csv_path: str):
         self.normalize = transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
             std=[0.229, 0.224, 0.225])
-        """ TODO: 前処理 反転やズーム
-
-        とりあえずしない
-        """
         self.transforms = transforms.Compose([
             transforms.Resize((224, 224), interpolation=Image.BICUBIC),
             transforms.ToTensor(),
@@ -74,7 +73,10 @@ def imagenet_n_dataloaders(
         root_dir: str, train_csv_path: str, val_csv_path: str,
         a_csv_path: str, random_seed: int, batch_size: int
         ) -> Tuple[DataLoader, DataLoader, DataLoader]:
-    """ ImageNet (Class数を増やすと学習の過程がどう変化するかをチェック)
+    """ ImageNetで評価セットが2つある時用のdataloader
+
+    Notes:
+        train時にDataSet内でrandomcropとrandomflipの前処理なし
     """
     global seed
 
@@ -143,13 +145,16 @@ def imagenet_dataloaders(
 
     Returns:
         Tuple[DataLoader, DataLoader]: dataloaderを返す
+
+    Notes:
+        train時にDataSet内でrandomcropとrandomflipの前処理なし
     """
     global seed
 
     train_set = IMAGENET(root_dir, train_csv_path)
     test_set = IMAGENET(root_dir, val_csv_path)
 
-    """ TODO: dataloaderのパラメータ
+    """ dataloaderのパラメータ
 
     バッチサイズは先行研究と同じ値
     num_workers, pin_memoryはデータを並列に読むための設定
