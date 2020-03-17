@@ -17,7 +17,7 @@ from torch.nn import CrossEntropyLoss
 from torch.optim import SGD
 # DataLoader
 # import preprocess
-from dataloader.imagenet import imagenet_train_eval_eval_dataloaders as imagenet_dataloaders
+from dataloaders.imagenet import imagenet_train_eval_eval_dataloaders as imagenet_dataloaders
 # モデル
 from models.resnet_for_imagenet import ResNetForImageNet as resnet18
 from models.vgg_for_imagenet import VGGForImageNet as vgg

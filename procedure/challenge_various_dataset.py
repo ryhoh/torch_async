@@ -17,11 +17,11 @@ from torch.nn import CrossEntropyLoss
 from torch.optim import SGD
 # DataLoader
 # import preprocess
-from dataloader.e_mnist import e_mnist_loaders
-from dataloader.fashion_mnist import fashion_mnist_loaders
-from dataloader.kuzushiji_mnist import k_mnist_loaders
-from dataloader.mnist import mnist_loaders
-from dataloader.q_mnist import q_mnist_loaders
+from dataloaders.e_mnist import e_mnist_loaders
+from dataloaders.fashion_mnist import fashion_mnist_loaders
+from dataloaders.kuzushiji_mnist import k_mnist_loaders
+from dataloaders.mnist import mnist_loaders
+from dataloaders.q_mnist import q_mnist_loaders
 # モデル
 from models.resnet_for_imagenet import ResNetForImageNet as resnet18
 
