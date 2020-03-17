@@ -138,7 +138,6 @@ def main():
             num_classes=fcout).to(device)
     elif args.convolution == 'efficientnet':
         model = efficientnet(
-            model_type=args.convolution,
             pooling=args.pooling,
             poolingshape=args.ps,
             sync=args.fc,
@@ -146,7 +145,6 @@ def main():
             num_classes=fcout).to(device)
     elif args.convolution == 'inceptionv3':
         model = inception_v3(
-            model_type=args.convolution,
             pooling=args.pooling,
             poolingshape=args.ps,
             sync=args.fc,
@@ -154,7 +152,6 @@ def main():
             num_classes=fcout).to(device)
     elif args.convolution == 'inceptionv4':
         model = inception_v4(
-            model_type=args.convolution,
             pooling=args.pooling,
             poolingshape=args.ps,
             sync=args.fc,
@@ -162,7 +159,6 @@ def main():
             num_classes=fcout).to(device)
     elif args.convolution == 'resnet152':
         model = resnet152(
-            model_type=args.convolution,
             pooling=args.pooling,
             poolingshape=args.ps,
             sync=args.fc,
