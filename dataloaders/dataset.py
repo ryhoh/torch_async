@@ -22,18 +22,19 @@ class IMAGENET(Dataset):
         root_dir (str): データセットのルートディレクトリ
         csv_path (str): ファイルパスカラム(path)とラベルカラム(label)を持つcsv
         purpose (str): 目的フラグ。trainであればrandomcropとrandomflipを有効化
-
+        resolution (int): 解像度
     Note:
         train時にDataSet内でrandomcropとrandomflipの前処理あり
     """
-    def __init__(self, root_dir: str, csv_path: str, purpose: str):
+    def __init__(self,
+                 root_dir: str, csv_path: str, purpose: str, resolution: int):
         self.normalize = transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
             std=[0.229, 0.224, 0.225])
         # 前処理
         if purpose == "train":
             self.transforms = transforms.Compose([
-                transforms.RandomResizedCrop(224),
+                transforms.RandomResizedCrop(resolution),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
                 self.normalize,
@@ -41,7 +42,7 @@ class IMAGENET(Dataset):
         else:
             self.transforms = transforms.Compose([
                 transforms.Resize(256),
-                transforms.CenterCrop(224),
+                transforms.CenterCrop(resolution),
                 transforms.ToTensor(),
                 self.normalize,
             ])

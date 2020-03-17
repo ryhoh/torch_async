@@ -1,6 +1,6 @@
 from typing import Tuple
 from torch.utils.data import DataLoader
-from dataset import IMAGENET
+from dataloaders.dataset import IMAGENET
 import random
 import numpy as np
 
@@ -17,7 +17,7 @@ def worker_init_fn(worker_id):
 
 def imagenet_train_eval_eval_dataloaders(
         root_dir: str, train_csv_path: str, val_csv_path: str,
-        a_csv_path: str, random_seed: int, batch_size: int
+        a_csv_path: str, random_seed: int, batch_size: int, resolution: int
         ) -> Tuple[DataLoader, DataLoader, DataLoader]:
     """ ImageNetで評価セットが2つある時用のdataloader
 
@@ -26,9 +26,9 @@ def imagenet_train_eval_eval_dataloaders(
     """
     global seed
 
-    train_set = IMAGENET(root_dir, train_csv_path, "train")
-    test_set = IMAGENET(root_dir, val_csv_path, "eval")
-    a_set = IMAGENET(root_dir, a_csv_path, "eval")
+    train_set = IMAGENET(root_dir, train_csv_path, "train", resolution)
+    test_set = IMAGENET(root_dir, val_csv_path, "eval", resolution)
+    a_set = IMAGENET(root_dir, a_csv_path, "eval", resolution)
 
     if random_seed:
         seed = random_seed
@@ -42,14 +42,14 @@ def imagenet_train_eval_eval_dataloaders(
         test_loader = DataLoader(
             test_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True,
             worker_init_fn=worker_init_fn)
         a_loader = DataLoader(
             a_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True,
             worker_init_fn=worker_init_fn)
@@ -63,13 +63,13 @@ def imagenet_train_eval_eval_dataloaders(
         test_loader = DataLoader(
             test_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True)
         a_loader = DataLoader(
             a_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True)
 
@@ -78,7 +78,7 @@ def imagenet_train_eval_eval_dataloaders(
 
 def imagenet_train_eval_dataloaders(
         root_dir: str, train_csv_path: str, val_csv_path: str,
-        random_seed: int, batch_size: int
+        random_seed: int, batch_size: int, resolution: int
         ) -> Tuple[DataLoader, DataLoader]:
     """ ImageNet用DataLoader
 
@@ -97,8 +97,8 @@ def imagenet_train_eval_dataloaders(
     """
     global seed
 
-    train_set = IMAGENET(root_dir, train_csv_path, "train")
-    test_set = IMAGENET(root_dir, val_csv_path, "eval")
+    train_set = IMAGENET(root_dir, train_csv_path, "train", resolution)
+    test_set = IMAGENET(root_dir, val_csv_path, "eval", resolution)
 
     """ dataloaderのパラメータ
 
@@ -118,7 +118,7 @@ def imagenet_train_eval_dataloaders(
         test_loader = DataLoader(
             test_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True,
             worker_init_fn=worker_init_fn)
@@ -132,7 +132,7 @@ def imagenet_train_eval_dataloaders(
         test_loader = DataLoader(
             test_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True)
 

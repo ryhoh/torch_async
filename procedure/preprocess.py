@@ -96,14 +96,14 @@ def imagenet_n_dataloaders(
         test_loader = DataLoader(
             test_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True,
             worker_init_fn=worker_init_fn)
         a_loader = DataLoader(
             a_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True,
             worker_init_fn=worker_init_fn)
@@ -117,13 +117,13 @@ def imagenet_n_dataloaders(
         test_loader = DataLoader(
             test_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True)
         a_loader = DataLoader(
             a_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True)
 
@@ -172,7 +172,7 @@ def imagenet_dataloaders(
         test_loader = DataLoader(
             test_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True,
             worker_init_fn=worker_init_fn)
@@ -186,7 +186,7 @@ def imagenet_dataloaders(
         test_loader = DataLoader(
             test_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True)
 
@@ -221,7 +221,7 @@ def cifar10_dataloader(random_seed: int, batch_size: int) -> Tuple[DataLoader, D
         test_loader = DataLoader(
             test_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True,
             worker_init_fn=worker_init_fn)
@@ -235,7 +235,7 @@ def cifar10_dataloader(random_seed: int, batch_size: int) -> Tuple[DataLoader, D
         test_loader = DataLoader(
             test_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True)
 
@@ -270,7 +270,7 @@ def cifar100_dataloader(random_seed: int, batch_size: int) -> Tuple[DataLoader, 
         test_loader = DataLoader(
             test_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True,
             worker_init_fn=worker_init_fn)
@@ -284,7 +284,7 @@ def cifar100_dataloader(random_seed: int, batch_size: int) -> Tuple[DataLoader, 
         test_loader = DataLoader(
             test_set,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=4,
             pin_memory=True)
 
@@ -350,9 +350,9 @@ def mnist_loaders() -> Tuple[DataLoader, DataLoader]:
                      download=True, transform=transform)
 
     # data_loader
-    train_loader = DataLoader(train_set, batch_size=4,
+    train_loader = DataLoader(train_set, batch_size=100,
                               shuffle=True, num_workers=4)
-    test_loader = DataLoader(test_set, batch_size=4,
+    test_loader = DataLoader(test_set, batch_size=100,
                              shuffle=False, num_workers=4)
 
     return train_loader, test_loader
