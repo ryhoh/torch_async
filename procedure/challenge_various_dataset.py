@@ -24,6 +24,7 @@ from dataloaders.mnist import mnist_loaders
 from dataloaders.q_mnist import q_mnist_loaders
 # モデル
 from models.resnet_for_imagenet import ResNetForImageNet as resnet18
+from models.vgg_for_imagenet import VGGForImageNet as vgg
 
 # tensorboard
 from torch.utils.tensorboard import SummaryWriter
@@ -35,7 +36,7 @@ from torchsummary import summary
 
 # 引数を受け取る
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('--convolution', choices=['resnet18'],
+parser.add_argument('--convolution', choices=['resnet18', 'vgg_with_maxpool', 'vgg_without_maxpool'],
                     help='convolution type', required=True)
 parser.add_argument('--dataset', choices=['e_mnist', 'fashion_mnist', 'mnist',
                     'q_mnist', 'kuzushiji_mnist'],
@@ -120,6 +121,22 @@ def main():
     # モデル
     if args.convolution == 'resnet18':
         model = resnet18(
+            pooling=args.pooling,
+            poolingshape=args.ps,
+            sync=args.fc,
+            middleshape=args.ms,
+            num_classes=fc_out).to(device)
+    elif args.convolution == 'vgg_without_maxpool':
+        model = vgg(
+            model_type=args.convolution,
+            pooling=args.pooling,
+            poolingshape=args.ps,
+            sync=args.fc,
+            middleshape=args.ms,
+            num_classes=fc_out).to(device)
+    elif args.convolution == 'vgg_with_maxpool':
+        model = vgg(
+            model_type=args.convolution,
             pooling=args.pooling,
             poolingshape=args.ps,
             sync=args.fc,
