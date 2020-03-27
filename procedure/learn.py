@@ -26,17 +26,6 @@ def write_record(records: dict, epoch: int):
 
 def conduct(model: nn.Module, train_loader, test_loader) -> dict:
     def rotate_all():
-        # try:
-        #     layers = model.classifier
-        # except AttributeError:
-        #     layers = model
-        #
-        # for layer in layers:
-        #     if isinstance(layer, Rotatable):
-        #         layer.rotate()
-        #
-        # assert list(loss_vector.size()) == [mini_batch_size]
-
         try:
             for layer in model.features:
                 if isinstance(layer, Rotatable):
@@ -103,15 +92,12 @@ def conduct(model: nn.Module, train_loader, test_loader) -> dict:
             if i % 2000 == 1999:
                 print('[%d, %5d] loss: %.3f' %
                       (epoch + 1, i + 1, reduced_loss.item()))
-                # running_loss = 0.0
 
         # end of epoch
         records['train_loss'].append(total_loss / data_n)
         records['train_accuracy'].append(total_correct / data_n)
         validate(model, test_loader, records)
         save(model)
-
-        # rotate_all()
 
         if epoch % 20 == 0:
             write_record(records, epoch)
