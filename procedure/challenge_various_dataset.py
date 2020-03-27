@@ -22,6 +22,9 @@ from dataloaders.fashion_mnist import fashion_mnist_loaders
 from dataloaders.kuzushiji_mnist import k_mnist_loaders
 from dataloaders.mnist import mnist_loaders
 from dataloaders.q_mnist import q_mnist_loaders
+
+from layers.static import Rotatable
+
 # モデル
 from models.resnet_for_imagenet import ResNetForImageNet as resnet18
 from models.vgg_for_imagenet import VGGForImageNet as vgg
@@ -216,6 +219,15 @@ def main():
     save(data=model, name=model_name, type="model")
 
 
+def rotate_all(model):
+    try:
+        for layer in model.fc:
+            if isinstance(layer, Rotatable):
+                layer.rotate()
+    except AttributeError:
+        pass
+
+
 def mkdirs(path):
     """ ディレクトリが無ければ作る """
     if not isdir(path):
@@ -345,6 +357,9 @@ def train(epoch, model, train_loader, optimizer, criterion_mean, criterion_sum, 
         loss.backward()
         # パラメータ更新
         optimizer.step()
+
+        rotate_all(model)
+
         # log
         outputs_list.append(outputs.to('cpu'))
         answers_list.append(labels.to('cpu'))
