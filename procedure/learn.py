@@ -9,7 +9,6 @@ from layers.static import Rotatable, OptimizedSemiSyncLinear
 import preprocess
 
 
-GPU_ENABLED = False
 
 
 def write_record(records: dict, epoch: int):
@@ -22,6 +21,7 @@ def write_record(records: dict, epoch: int):
         'validation_loss': records['validation_loss'],
         'validation_accuracy': records['validation_accuracy'],
     }).to_csv("semisync_" + str(epoch) + "_valid.csv")
+GPU_ENABLED = True
 
 
 def conduct(model: nn.Module, train_loader, test_loader) -> dict:
