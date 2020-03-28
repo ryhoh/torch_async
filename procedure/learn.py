@@ -5,61 +5,80 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision.models import vgg
+from torchvision import models
 from layers.static import Rotatable, OptimizedSemiSyncLinear
 import preprocess
+# タイムスタンプ
+import datetime
+# ファイル操作
+from os import getcwd, makedirs
+from os.path import join, isdir
+# tensorboard
+from torch.utils.tensorboard import SummaryWriter
+# メモリ解放
+import gc
+# 引数
+import argparse
 
+# 引数を受け取る
+parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
+parser.add_argument('--convolution', choices=['resnet18', 'vgg16'],
+                    help='convolution type', required=True)
+parser.add_argument('--fc', choices=['none', 'normal', 'semi'],
+                    help='full connected type', required=True)
+parser.add_argument('--epochs', default=100, type=int, metavar='N',
+                    help='number of total epochs to run')
+args = parser.parse_args()
 
+now = datetime.datetime.now()
+MODEL_NAME = "{}_{}_{}_{}_hori_modif".format(
+    now.strftime("%Y-%m-%d_%H-%M-%S"),
+    args.convolution,
+    args.fc,
+    args.epochs
+)
+writer = SummaryWriter('runs/' + MODEL_NAME)
 
-
-def write_record(records: dict, epoch: int):
-    pd.DataFrame({
-        'train_loss': records['train_loss'],
-        'train_accuracy': records['train_accuracy'],
-    }).to_csv("semisync_" + str(epoch) + "_train.csv")
-
-    pd.DataFrame({
-        'validation_loss': records['validation_loss'],
-        'validation_accuracy': records['validation_accuracy'],
-    }).to_csv("semisync_" + str(epoch) + "_valid.csv")
 GPU_ENABLED = True
 
 
 def conduct(model: nn.Module, train_loader, test_loader) -> dict:
     def rotate_all():
+        global args, model
+
         try:
-            for layer in model.features:
-                if isinstance(layer, Rotatable):
-                    layer.rotate()
+            if args.convolution == "resnet18":
+                for layer in model.fc:
+                    if isinstance(layer, Rotatable):
+                        layer.rotate()
+            elif args.convolution == "vgg16":
+                for layer in model.classifier:
+                    if isinstance(layer, Rotatable):
+                        layer.rotate()
+                pass
+            else:
+                raise ValueError("引数convolutionの値が不正です")
         except AttributeError:
             pass
-
-    def post_epoch():
-        pass
-
-    records = {
-        'train_loss': [],
-        'validation_loss': [],
-        'train_accuracy': [],
-        'validation_accuracy': [],
-    }
 
     loss_layer = nn.CrossEntropyLoss(reduction='none')
     loss_layer_reduce = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
-    data_n = len(train_loader.dataset)
-
     # validation of pre_training
-    validate(model, test_loader, records)
+    validate(model, test_loader, -1)
 
     # training
-    for epoch in range(100):
+    for epoch in range(args.epochs):
+        model.train()
+        outputs_list = []
+        answers_list = []
         total_loss = 0.0
         total_correct = 0
+        item_counter = 0
 
         for i, mini_batch in enumerate(train_loader):
             input_data, label_data = mini_batch
-            mini_batch_size = list(input_data.size())[0]
 
             if GPU_ENABLED:
                 in_tensor = input_data.to('cuda')
@@ -67,10 +86,6 @@ def conduct(model: nn.Module, train_loader, test_loader) -> dict:
             else:
                 in_tensor = input_data
                 label_tensor = label_data
-
-            if i == 0:
-                print("epoch started")
-                print("mini_batch_size:", mini_batch_size)
 
             optimizer.zero_grad()  # Optimizer を0で初期化
 
@@ -88,33 +103,53 @@ def conduct(model: nn.Module, train_loader, test_loader) -> dict:
 
             total_loss += loss_vector.data.sum().item()
             total_correct += (predicted.to('cpu') == label_data).sum().item()
+            item_counter += len(outputs)
+            outputs_list.append(outputs.to('cpu'))
+            answers_list.append(label_tensor.to('cpu'))
+            # debug
+            print('Epoch: [{0}][{1}/{2}]\t'
+                  'Loss {loss:.4f}\t'
+                  'Accuracy: {accuracy:.3f}'.format(
+                   epoch, i, len(train_loader),
+                   loss=loss_vector.data.sum().item(),
+                   accuracy=(predicted.to('cpu') == label_data).sum().item()/len(outputs)))
 
-            if i % 2000 == 1999:
-                print('[%d, %5d] loss: %.3f' %
-                      (epoch + 1, i + 1, reduced_loss.item()))
+        """ 記録"""
+        writer.add_scalar('train loss',
+                          total_loss/item_counter,
+                          epoch)
+        writer.add_scalar('train Accuracy',
+                          total_correct/item_counter,
+                          epoch)
+        d = {
+            "outputs": outputs_list,
+            "answers": answers_list
+        }
+        n = "train_{}".format(epoch)
+        save(data=d, name=n, type="progress")
+        """ メモリ解放"""
+        del outputs_list
+        del answers_list
+        gc.collect()
 
-        # end of epoch
-        records['train_loss'].append(total_loss / data_n)
-        records['train_accuracy'].append(total_correct / data_n)
-        validate(model, test_loader, records)
-        save(model)
-
-        if epoch % 20 == 0:
-            write_record(records, epoch)
+        """ 評価"""
+        validate(model, test_loader, epoch)
 
     print('Finished Training')
-    return records
 
 
-def validate(model: nn.Module, test_loader, records: dict):
+def validate(model: nn.Module, test_loader, epoch: int):
+    model.eval()
     with torch.no_grad():
         loss_layer = nn.CrossEntropyLoss(reduction='none')
 
+        outputs_list = []
+        answers_list = []
         total_correct = 0
         total_loss = 0.0
-        data_n = len(test_loader.dataset)
+        item_counter = 0
 
-        for mini_batch in test_loader:
+        for i, mini_batch in enumerate(test_loader):
             input_data, label_data = mini_batch
             mini_batch_size = list(input_data.size())[0]
 
@@ -133,45 +168,130 @@ def validate(model: nn.Module, test_loader, records: dict):
 
             total_correct += (predicted.to('cpu') == label_data).sum().item()
             total_loss += loss_vector.sum().item()
+            item_counter += len(outputs)
+            outputs_list.append(outputs.to('cpu'))
+            answers_list.append(label_tensor.to('cpu'))
+            # debug
+            print('progress: [{0}/{1}]\t'
+                  'Loss: {loss:.3f}\t'
+                  'Accuracy: {accuracy:.3f}'.format(
+                      i, len(test_loader),
+                      loss=loss_vector.sum().item(),
+                      accuracy=(predicted.to('cpu') == label_data).sum().item()/len(outputs)))
 
-        accuracy = total_correct / data_n
-        loss_per_record = total_loss / data_n
-        print('Loss: {:.3f}, Accuracy: {:.3f}'.format(
-            loss_per_record,
-            accuracy
-        ))
-        records['validation_loss'].append(loss_per_record)
-        records['validation_accuracy'].append(accuracy)
+        """ 記録"""
+        writer.add_scalar('validate loss',
+                          total_loss/item_counter,
+                          epoch)
+        writer.add_scalar('validate Accuracy',
+                          total_correct/item_counter,
+                          epoch)
+        d = {
+            "outputs": outputs_list,
+            "answers": answers_list
+        }
+        n = "validate_{}".format(epoch)
+        save(data=d, name=n, type="progress")
+        """ メモリ解放"""
+        del outputs_list
+        del answers_list
+        gc.collect()
 
 
-def save(model: nn.Module):
-    with open("models.pkl", 'wb') as f:
-        pickle.dump(model, f)
+def mkdirs(path):
+    """ ディレクトリが無ければ作る """
+    if not isdir(path):
+        makedirs(path)
+
+
+def save(data, name, type):
+    """ 保存
+
+    data: 保存するデータ
+    name: ファイル名
+    type: データのタイプ
+    """
+    global MODEL_NAME
+
+    save_dir = join(getcwd(), "log/" + MODEL_NAME)
+    mkdirs(save_dir)
+
+    if type == "model":
+        """ モデルを保存
+
+        Memo: ロードする方法
+        model = TheModelClass(*args, **kwargs)
+        model.load_state_dict(torch.load(PATH))
+        model.eval()
+        """
+        torch.save(data.state_dict(), join(save_dir, name+'.model'))
+    elif type == "progress":
+        """ 予測の途中経過
+
+        Memo: ロードする方法
+        data = None
+        with open(PATH, 'rb') as f:
+            data = pickle.load(f)
+        """
+        with open(join(save_dir, name+'.dump'), 'wb') as f:
+            pickle.dump(data, f)
 
 
 if __name__ == '__main__':
-    for semisync in (True,):
-        torch.manual_seed(0)
+    torch.manual_seed(0)
+    poolingshape = 1
+    in_shape = 512 * poolingshape * poolingshape
+    middleshape = 4096
+    num_classes = 200
 
-        model = vgg.vgg16()
-
+    # モデルを定義
+    if args.convolution == "vgg16":
+        model = vgg.vgg16(pretrained=False)
         if GPU_ENABLED:
             model.to('cuda')
-        if semisync:
-            model.classifier[0] = OptimizedSemiSyncLinear(model.classifier[0])
-            model.classifier[3] = OptimizedSemiSyncLinear(model.classifier[3])
+        if args.fc == "normal":
+            model.classifier = nn.Sequential(
+                nn.Linear(in_shape, middleshape),
+                nn.ReLU(middleshape),
+                nn.Linear(middleshape, num_classes),
+            )
+        elif args.fc == "semi":
+            model.classifier = nn.Sequential(
+                OptimizedSemiSyncLinear(nn.Linear(in_shape, middleshape)),
+                nn.ReLU(middleshape),
+                nn.Linear(middleshape, num_classes),
+            )
+        elif args.fc == "none":
+            model.classifier = nn.Sequential(
+                nn.Linear(in_shape, num_classes),
+            )
+        else:
+            raise ValueError("引数fcの値が不正です")
+    elif args.convolution == "resnet18":
+        model = models.resnet18(pretrained=False)
+        if args.fc == "normal":
+            model.fc = nn.Sequential(
+                nn.Linear(in_shape, middleshape),
+                nn.ReLU(middleshape),
+                nn.Linear(middleshape, num_classes),
+            )
+        elif args.fc == "semi":
+            model.fc = nn.Sequential(
+                OptimizedSemiSyncLinear(nn.Linear(in_shape, middleshape)),
+                nn.ReLU(middleshape),
+                nn.Linear(middleshape, num_classes),
+            )
+        elif args.fc == "none":
+            model.fc = nn.Sequential(
+                nn.Linear(in_shape, num_classes),
+            )
+        else:
+            raise ValueError("引数fcの値が不正です")
+    else:
+        raise ValueError("引数convolutionの値が不正です")
 
-        print(model)
+    model.train()
+    conduct(model, *(preprocess.cifar_10_for_vgg_loaders()))
 
-        model.train()
-        record = conduct(model, *(preprocess.cifar_10_for_vgg_loaders()))
-
-        pd.DataFrame({
-            'train_loss':     record['train_loss'],
-            'train_accuracy': record['train_accuracy'],
-        }).to_csv("semisync_" + str(semisync) + "_train.csv")
-
-        pd.DataFrame({
-            'validation_loss':     record['validation_loss'],
-            'validation_accuracy': record['validation_accuracy'],
-        }).to_csv("semisync_" + str(semisync) + "_valid.csv")
+    """ 学習後のモデルをdumpする"""
+    save(data=model, name=MODEL_NAME, type="model")
