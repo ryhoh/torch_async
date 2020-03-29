@@ -4,8 +4,8 @@ import pickle
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from models.Elastic_VGG16 import Elastic_VGG16 as vgg16
-from models.Elastic_ResNet18 import Elastic_ResNet18 as resnet18
+from models.elastic_vgg16 import Elastic_VGG16 as vgg16
+from models.elastic_resnet18 import Elastic_ResNet18 as resnet18
 from layers.static import Rotatable
 import preprocess
 # タイムスタンプ

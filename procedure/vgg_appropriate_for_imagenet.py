@@ -8,7 +8,7 @@ from torchvision.models import vgg
 from torchvision import models
 from layers.static import Rotatable, OptimizedSemiSyncLinear
 # データセット
-from dataloaders.imagenet import imagenet_train_eval_dataloaders as imagenet
+from dataloaders.imagenet import imagenet_train_eval_eval_dataloaders as imagenet
 # タイムスタンプ
 import datetime
 # ファイル操作

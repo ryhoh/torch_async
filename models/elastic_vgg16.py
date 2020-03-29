@@ -67,7 +67,9 @@ class Elastic_VGG16(nn.Module):
         else:
             raise ValueError("引数fcの値が不正です")
 
-        self.fc = nn.ModuleList(fc)
+        self.fc = nn.Sequential()
+        for i, layer in enumerate(fc):
+            self.fc.add_module(str(i), layer)
 
     def forward(self, x):
         x = self.vgg(x)

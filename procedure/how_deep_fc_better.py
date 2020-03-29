@@ -291,10 +291,14 @@ if __name__ == '__main__':
     # モデルを定義
     if args.convolution == "vgg16":
         model = vgg.vgg16(pretrained=False)
-        model.classifier = nn.ModuleList(fc)
+        model.classifier = nn.Sequential()
+        for i, layer in enumerate(fc):
+            model.classifier.add_module(str(i), layer)
     elif args.convolution == "resnet18":
         model = models.resnet18(pretrained=False)
-        model.fc = nn.ModuleList(fc)
+        model.fc = nn.Sequential()
+        for i, layer in enumerate(fc):
+            model.fc.add_module(str(i), layer)
     if GPU_ENABLED:
         model.to('cuda')
     else:

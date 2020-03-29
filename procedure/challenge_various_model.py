@@ -229,7 +229,7 @@ def main():
 
     # 評価
     validate(-1, model, val_loader, criterion_mean, criterion_sum, device)
-
+    # TODO: val_a
     # 学習
     for epoch in range(args.epochs):
         train(epoch, model, train_loader, optimizer, criterion_mean, criterion_sum, device)
