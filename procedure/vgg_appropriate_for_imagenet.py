@@ -304,16 +304,13 @@ if __name__ == '__main__':
     torch.manual_seed(0)
     if args.convolution == "vgg16":
         poolingshape = 7
-        in_shape = 512 * poolingshape * poolingshape
-        middleshape = 4096
-        num_classes = 10
     elif args.convolution == "resnet18":
         poolingshape = 1
+    else:
+        raise ValueError("引数convolutionの値が不正です")
         in_shape = 512 * poolingshape * poolingshape
         middleshape = 4096
         num_classes = 200
-    else:
-        raise ValueError("引数convolutionの値が不正です")
 
     # モデルを定義
     if args.convolution == "vgg16":
