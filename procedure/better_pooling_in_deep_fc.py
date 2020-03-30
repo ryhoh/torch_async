@@ -6,6 +6,8 @@ import torch.nn as nn
 import torch.optim as optim
 from models.elastic_vgg16 import Elastic_VGG16 as vgg16
 from models.elastic_resnet18 import Elastic_ResNet18 as resnet18
+from models.elastic_alexnet import Elastic_Alexnet as alexnet
+from models.elastic_resnet152 import Elastic_ResNet152 as resnet152
 from layers.static import Rotatable
 import preprocess
 # タイムスタンプ
@@ -23,7 +25,7 @@ import argparse
 # 引数を受け取る
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('--convolution',
-                    choices=['resnet18', 'vgg_with_maxpool', 'vgg_without_maxpool'],
+                    choices=['resnet18', 'vgg_with_maxpool', 'vgg_without_maxpool', 'resnet152', 'alexnet'],
                     help='convolution type', required=True)
 parser.add_argument('-p', '--pooling', choices=['max', 'average'],
                     help='pooling method', required=True)
@@ -250,6 +252,14 @@ if __name__ == '__main__':
         )
     elif args.convolution == "resnet18":
         model = resnet18(
+            num_classes=10, pooling=args.pooling, sync=args.fc
+        )
+    elif args.convolution == "resnet152":
+        model = resnet152(
+            num_classes=10, pooling=args.pooling, sync=args.fc
+        )
+    elif args.convolution == "alexnet":
+        model = alexnet(
             num_classes=10, pooling=args.pooling, sync=args.fc
         )
     else:
