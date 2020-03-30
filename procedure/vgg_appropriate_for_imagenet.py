@@ -308,9 +308,9 @@ if __name__ == '__main__':
         poolingshape = 1
     else:
         raise ValueError("引数convolutionの値が不正です")
-        in_shape = 512 * poolingshape * poolingshape
-        middleshape = 4096
-        num_classes = 200
+    in_shape = 512 * poolingshape * poolingshape
+    middleshape = 4096
+    num_classes = 200
 
     # モデルを定義
     if args.convolution == "vgg16":
