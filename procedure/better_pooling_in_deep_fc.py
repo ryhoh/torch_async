@@ -243,7 +243,7 @@ if __name__ == '__main__':
             num_classes=10, model_type=args.convolution, pooling=args.pooling,
             sync=args.fc
         )
-    if args.convolution == "vgg_without_maxpool":
+    elif args.convolution == "vgg_without_maxpool":
         model = vgg16(
             num_classes=10, model_type=args.convolution, pooling=args.pooling,
             sync=args.fc
