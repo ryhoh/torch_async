@@ -11,7 +11,7 @@ class Elastic_ResNet152(nn.Module):
                  num_classes=100,
                  pooling="average", poolingshape=1, middleshape=4096,
                  sync="normal", dropout_prob=0.5, deepness=2):
-        super(ResNet152, self).__init__()
+        super(Elastic_ResNet152, self).__init__()
         """ use resnet152 """
         resnet = models.resnet152(pretrained=False)
         self.resnet = nn.Sequential(*list(resnet.children())[:-2])

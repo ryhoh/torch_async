@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from torchvision.models import alexnet
+from torchvision import models
 
 # 準同期式レイヤ
 from layers.static import OptimizedSemiSyncLinear
