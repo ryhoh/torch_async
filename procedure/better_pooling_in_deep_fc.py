@@ -243,24 +243,24 @@ if __name__ == '__main__':
     if args.convolution == "vgg_with_maxpool":
         model = vgg16(
             num_classes=10, model_type=args.convolution, pooling=args.pooling,
-            sync=args.fc
+            sync=args.fc, deepness=args.deepness
         )
     elif args.convolution == "vgg_without_maxpool":
         model = vgg16(
             num_classes=10, model_type=args.convolution, pooling=args.pooling,
-            sync=args.fc
+            sync=args.fc, deepness=args.deepness
         )
     elif args.convolution == "resnet18":
         model = resnet18(
-            num_classes=10, pooling=args.pooling, sync=args.fc
+            num_classes=10, pooling=args.pooling, sync=args.fc, deepness=args.deepness
         )
     elif args.convolution == "resnet152":
         model = resnet152(
-            num_classes=10, pooling=args.pooling, sync=args.fc
+            num_classes=10, pooling=args.pooling, sync=args.fc, deepness=args.deepness
         )
     elif args.convolution == "alexnet":
         model = alexnet(
-            num_classes=10, pooling=args.pooling, sync=args.fc
+            num_classes=10, pooling=args.pooling, sync=args.fc, deepness=args.deepness
         )
     else:
         raise ValueError("引数convolutionの値が不正です")
