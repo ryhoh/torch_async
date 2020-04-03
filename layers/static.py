@@ -5,12 +5,8 @@ from math import sqrt
 from torch import Tensor
 from torch.nn.modules import *
 
-from functions.static import StaticGroupLinearFunction, OptimizedGroupLinearFunction, OptimizedContinuousLinearFunction
-
-
-class Rotatable(object):
-    def rotate(self):
-        raise NotImplementedError
+from .base import Rotatable
+from functions import StaticGroupLinearFunction, OptimizedGroupLinearFunction, OptimizedContinuousLinearFunction
 
 
 class SemiSyncLinear(Linear, Rotatable):
@@ -47,8 +43,6 @@ class SemiSyncLinear(Linear, Rotatable):
 
         self.group_delim = group_delim
         self.group_i = group_i
-        # self.register_buffer("group_delim", torch.as_tensor(group_delim).requires_grad_(False))
-        # self.register_buffer("group_i",     torch.as_tensor(group_i).requires_grad_(False))
 
     def forward(self, input_tensor) -> Tensor:
         self.learn_l = self.group_delim[self.group_i-1]

@@ -5,10 +5,11 @@ import torch
 from torch import tensor
 from torch.autograd import Variable
 from torch.nn import Parameter
-from torch.nn.modules import Linear, MSELoss
+from torch.nn.modules import Linear, Conv2d, MSELoss
+from torch.nn.functional import relu
 from torchvision import models
 
-from layers.static import SemiSyncLinear
+from layers import SemiSyncLinear, MyConv2d, RandomSemiSyncConv2d
 
 
 class TestSemiSyncNet(unittest.TestCase):
@@ -209,6 +210,78 @@ class TestSemiSyncAtUnbalance(unittest.TestCase):
         self.assertEqual(0, left)
         self.assertEqual(63, right)
         self.layer.rotate()
+
+
+class TestMyConv2d(unittest.TestCase):
+    def setUp(self) -> None:
+        self.orig_conv1 = Conv2d( 3,  32, kernel_size=9, stride=1)
+        self.orig_conv2 = Conv2d(32,  64, kernel_size=3, stride=2)
+        self.orig_conv3 = Conv2d(64, 128, kernel_size=3, stride=2)
+
+        self.conv1 = MyConv2d(self.orig_conv1)
+        self.conv2 = MyConv2d(self.orig_conv2)
+        self.conv3 = MyConv2d(self.orig_conv3)
+
+    def testParam(self):
+        # 別オブジェクトだが同じパラメータを持つことを確認
+        self.assertTrue(self.orig_conv1 is not self.conv1)
+        self.assertTrue(self.orig_conv2 is not self.conv2)
+        self.assertTrue(self.orig_conv3 is not self.conv3)
+
+        self.assertTrue(self.orig_conv1.in_channels  == self.conv1.in_channels)
+        self.assertTrue(self.orig_conv1.out_channels == self.conv1.out_channels)
+        self.assertTrue(self.orig_conv1.kernel_size  == self.conv1.kernel_size)
+        self.assertTrue(self.orig_conv1.stride       == self.conv1.stride)
+        self.assertTrue(self.orig_conv1.padding      == self.conv1.padding)
+        self.assertTrue(self.orig_conv1.dilation     == self.conv1.dilation)
+        self.assertTrue(self.orig_conv1.groups       == self.conv1.groups)
+        self.assertTrue(self.orig_conv1.padding_mode == self.conv1.padding_mode)
+
+        self.assertTrue((self.orig_conv1.weight == self.conv1.weight).byte().all())
+        self.assertTrue((self.orig_conv1.bias   == self.conv1.bias  ).byte().all())
+        self.assertTrue((self.orig_conv2.weight == self.conv2.weight).byte().all())
+        self.assertTrue((self.orig_conv2.bias   == self.conv2.bias  ).byte().all())
+        self.assertTrue((self.orig_conv3.weight == self.conv3.weight).byte().all())
+        self.assertTrue((self.orig_conv3.bias   == self.conv3.bias  ).byte().all())
+
+    def testForward(self):
+        torch.manual_seed(0)
+        X = torch.randn(50, 3, 128, 128)  # (128 x 128) カラー画像 50枚
+
+        expected_y = relu(self.orig_conv1.forward(X))
+        expected_y = relu(self.orig_conv2.forward(expected_y))
+        expected_y = relu(self.orig_conv3.forward(expected_y))
+
+        actual_y = relu(self.conv1.forward(X))
+        actual_y = relu(self.conv2.forward(actual_y))
+        actual_y = relu(self.conv3.forward(actual_y))
+
+        self.assertTrue((expected_y == actual_y).byte().all())
+
+
+class TestRandomSemiSyncConv2d(unittest.TestCase):
+    def setUp(self) -> None:
+        self.orig_conv1 = Conv2d( 3,  32, kernel_size=9, stride=1)
+        self.orig_conv2 = Conv2d(32,  64, kernel_size=3, stride=2)
+        self.orig_conv3 = Conv2d(64, 128, kernel_size=3, stride=2)
+
+        self.conv1 = RandomSemiSyncConv2d(self.orig_conv1, 1.0)
+        self.conv2 = RandomSemiSyncConv2d(self.orig_conv2, 1.0)
+        self.conv3 = RandomSemiSyncConv2d(self.orig_conv3, 1.0)
+
+    def testForward(self):
+        torch.manual_seed(0)
+        X = torch.randn(50, 3, 128, 128)  # (128 x 128) カラー画像 50枚
+
+        expected_y = relu(self.orig_conv1.forward(X))
+        expected_y = relu(self.orig_conv2.forward(expected_y))
+        expected_y = relu(self.orig_conv3.forward(expected_y))
+
+        actual_y = relu(self.conv1.forward(X))
+        actual_y = relu(self.conv2.forward(actual_y))
+        actual_y = relu(self.conv3.forward(actual_y))
+
+        self.assertTrue((expected_y == actual_y).byte().all())
 
 
 if __name__ == '__main__':
