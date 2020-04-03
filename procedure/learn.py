@@ -10,8 +10,8 @@ import torch.optim as optim
 from torchvision.models import vgg
 
 from procedure import preprocess
-from layers import Rotatable
-from layers.random_semisync import *
+from layers.static import *
+from models.dense import SimpleMLP, FeatureClassifyMLP, FeatureClassifyMLPFrontVer
 
 
 GPU_ENABLED = False
@@ -168,19 +168,27 @@ def save(model: nn.Module):
 
 
 if __name__ == '__main__':
-    for mode in (None, RandomSemiSyncLinear, RandomSequentialLinear):
+    for semisync in (True,):
         torch.manual_seed(0)
+
         model = vgg.vgg16()
+        # model = FeatureClassifyMLPFrontVer()
+        #
+        # if semisync:
+        #     for layer_i in (0, 3):
+        #         models.classifier[layer_i] = SemiSyncLinear(models.classifier[layer_i])
+        #
+        # if GPU_ENABLED:
+        #     models.to('cuda')
+        #
+        if semisync:
+        #     targets = [0]
+        #     for target in targets:
+        #         model.classifier[target] = OptimizedContinuousLinear(model.classifier[target])
 
-        model.classifier[-1] = Linear(in_features=4096, out_features=10, bias=True)
-        if mode is None:  # Linear
-            pass
-        else:
-            model.classifier[0] = mode(model.classifier[0])
-            model.classifier[3] = mode(model.classifier[3])
+            model.classifier[0] = OptimizedSemiSyncLinear(model.classifier[0])
+            model.classifier[3] = OptimizedSemiSyncLinear(model.classifier[3])
 
-        if GPU_ENABLED:
-            model.to('cuda')
         print(model)
 
         # model.train()
