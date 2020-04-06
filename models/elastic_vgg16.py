@@ -9,7 +9,7 @@ from layers.static import OptimizedSemiSyncLinear
 class Elastic_VGG16(nn.Module):
     def __init__(self,
                  num_classes=100, model_type="vgg_without_maxpool",
-                 pooling="average", poolingshape=1, middleshape=4096,
+                 pooling="average", poolingshape=7, middleshape=4096,
                  sync="normal", dropout_prob=0.5, deepness=2):
         super(Elastic_VGG16, self).__init__()
 

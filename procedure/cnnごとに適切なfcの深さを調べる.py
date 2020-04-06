@@ -256,11 +256,11 @@ if __name__ == '__main__':
         poolingshape = 1
         in_shape = 512 * poolingshape * poolingshape
     elif args.convolution == "resnet152":
-        poolingshape = 1
-        in_shapee = 2048 * poolingshape * poolingshape
+        poolingshape = 2
+        in_shape = 512 * poolingshape * poolingshape
     elif args.convolution == "alexnet":
         poolingshape = 6
-        in_shapee = 256 * poolingshape * poolingshape
+        in_shape = 256 * poolingshape * poolingshape
     else:
         raise ValueError("引数convolutionの値が不正です")
     middleshape = 4096

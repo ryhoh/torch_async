@@ -9,7 +9,7 @@ from layers.static import OptimizedSemiSyncLinear
 class Elastic_Alexnet(nn.Module):
     def __init__(self,
                  num_classes=100,
-                 pooling="average", poolingshape=1, middleshape=4096,
+                 pooling="average", poolingshape=6, middleshape=4096,
                  sync="normal", dropout_prob=0.5, deepness=2):
         super(Elastic_Alexnet, self).__init__()
 
