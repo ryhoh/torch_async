@@ -248,7 +248,7 @@ if __name__ == '__main__':
     elif args.convolution == "vgg_without_maxpool":
         model = vgg16(
             num_classes=10, model_type=args.convolution, pooling=args.pooling,
-            sync=args.fc, deepness=args.deepness
+            sync=args.fc, deepness=args.deepness, poolingshape=7
         )
     elif args.convolution == "resnet18":
         model = resnet18(
