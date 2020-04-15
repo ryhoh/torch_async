@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import pandas as pd
 
 import torch
@@ -41,15 +43,15 @@ def conduct(model: nn.Module, train_loader: DataLoader, test_loader: DataLoader)
     }
 
     # 全く学習していない状態で測定
-    validate(learner, dataset, records)
+    records = validate(learner, dataset, records)
 
     # training
     for epoch in range(100):
-        records = run_epoch(
-            learner, dataset['train_loader'], dataset['length'], records, epoch)
+        learner, records = run_epoch(
+            learner, dataset['train'], dataset['length'], records, epoch)
 
         # 測定，準同期のグループ交代
-        validate(learner, dataset, records)
+        records = validate(learner, dataset, records)
         rotate_all()
 
     print('Finished Training')
@@ -57,7 +59,8 @@ def conduct(model: nn.Module, train_loader: DataLoader, test_loader: DataLoader)
 
 
 def run_epoch(learner: dict, train_loader: DataLoader, data_n: int,
-              records: dict, epoch: int) -> dict:
+              records: dict, epoch: int) -> Tuple[dict, dict]:
+    learner['model'].train()
     total_loss = 0.0
     total_correct = 0
 
@@ -73,20 +76,18 @@ def run_epoch(learner: dict, train_loader: DataLoader, data_n: int,
             label_tensor = label_data
 
         if i == 0:
-            print("epoch{:04d} started" % epoch)
+            print("epoch%04d started" % epoch)
 
         learner['optimizer'].zero_grad()  # Optimizer を0で初期化
 
         # forward - backward - optimize
         outputs = learner['model'](in_tensor)
         loss_vector = learner['loss_layer'](outputs, label_tensor)  # for evaluation
-        reduced_loss = learner['loss_layer'](outputs, label_tensor)  # for backward
+        reduced_loss = learner['loss_layer_reduce'](outputs, label_tensor)  # for backward
         _, predicted = torch.max(outputs.data, 1)
 
         reduced_loss.backward()
         learner['optimizer'].step()
-
-        rotate_all()
 
         total_loss += loss_vector.data.sum().item()
         total_correct += (predicted.to('cpu') == label_data).sum().item()
@@ -97,10 +98,10 @@ def run_epoch(learner: dict, train_loader: DataLoader, data_n: int,
 
         records['train_loss'].append(total_loss / data_n)
         records['train_accuracy'].append(total_correct / data_n)
-        return records
+        return learner, records
 
 
-def validate(learner: dict, dataset: dict, records: dict) -> None:
+def validate(learner: dict, dataset: dict, records: dict) -> dict:
     with torch.no_grad():
         loss_layer = nn.CrossEntropyLoss(reduction='none')
 
@@ -136,6 +137,7 @@ def validate(learner: dict, dataset: dict, records: dict) -> None:
         ))
         records['validation_loss'].append(loss_per_record)
         records['validation_accuracy'].append(accuracy)
+        return records
 
 
 if __name__ == '__main__':
@@ -166,7 +168,6 @@ if __name__ == '__main__':
 
         print(myvgg)
         myvgg.to(device)
-        myvgg.train()
         record = conduct(myvgg, *(preprocess.cifar_10_for_vgg_loaders()))
 
         pd.DataFrame({
