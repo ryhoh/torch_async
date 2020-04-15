@@ -17,8 +17,8 @@ GPU_ENABLED = True
 device = "cuda:1"
 
 
-def rotate_all():
-    for layer in myvgg.classifier:
+def rotate_all(learner: dict):
+    for layer in learner['model'].classifier:
         if isinstance(layer, Rotatable):
             layer.rotate()
 
@@ -47,12 +47,10 @@ def conduct(model: nn.Module, train_loader: DataLoader, test_loader: DataLoader)
 
     # training
     for epoch in range(100):
-        learner, records = run_epoch(
-            learner, dataset['train'], dataset['length'], records, epoch)
+        learner, records = run_epoch(learner, dataset['train'], dataset['length'], records, epoch)
 
-        # 測定，準同期のグループ交代
+        # 測定
         records = validate(learner, dataset, records)
-        rotate_all()
 
     print('Finished Training')
     return records
@@ -96,9 +94,13 @@ def run_epoch(learner: dict, train_loader: DataLoader, data_n: int,
             print('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, reduced_loss.item()))
 
-        records['train_loss'].append(total_loss / data_n)
-        records['train_accuracy'].append(total_correct / data_n)
-        return learner, records
+        # 準同期式のグループ交代
+        rotate_all(learner)
+
+    records['train_loss'].append(total_loss / data_n)
+    records['train_accuracy'].append(total_correct / data_n)
+
+    return learner, records
 
 
 def validate(learner: dict, dataset: dict, records: dict) -> dict:
@@ -137,13 +139,13 @@ def validate(learner: dict, dataset: dict, records: dict) -> dict:
         ))
         records['validation_loss'].append(loss_per_record)
         records['validation_accuracy'].append(accuracy)
-        return records
+    
+    return records
 
 
 if __name__ == '__main__':
     for N in (1, 64, 4096):
         torch.manual_seed(3340)
-
         myvgg = vgg.vgg16()
 
         assert isinstance(myvgg.classifier[0], Linear)
