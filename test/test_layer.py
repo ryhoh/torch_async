@@ -9,7 +9,7 @@ from torch.nn.modules import Linear, Conv2d, MSELoss
 from torch.nn.functional import relu
 from torchvision import models
 
-from layers import SemiSyncLinear, MyConv2d, RandomSemiSyncConv2d
+from layers import SemisyncLinear, MyConv2d, RandomSemiSyncConv2d
 
 
 class TestSemiSyncNet(unittest.TestCase):
@@ -21,10 +21,10 @@ class TestSemiSyncNet(unittest.TestCase):
 
     # 同期式のレイヤーから、パラメータをそのままにして準同期式レイヤを作る
     def testParam(self):
-        self.vgg16_semisync.classifier[0] = SemiSyncLinear(
+        self.vgg16_semisync.classifier[0] = SemisyncLinear(
             self.vgg16_semisync.classifier[0],
         ).to('cuda')
-        self.vgg16_semisync.classifier[3] = SemiSyncLinear(
+        self.vgg16_semisync.classifier[3] = SemisyncLinear(
             self.vgg16_semisync.classifier[3],
         ).to('cuda')
 
@@ -49,7 +49,7 @@ class TestSemiSync(unittest.TestCase):
         ], requires_grad=True).t())
         base_layer.bias = Parameter(tensor([0.0, 0.0, 0.0, 0.0], requires_grad=True))
 
-        self.layer = SemiSyncLinear(base_layer, group_list=None).to('cuda')
+        self.layer = SemisyncLinear(base_layer, group_list=None).to('cuda')
 
     def testGroup(self):
         self.assertEqual([0, 2, 4], self.layer.group_delim)
@@ -180,7 +180,7 @@ class TestSemiSync(unittest.TestCase):
 class TestSemiSyncAtUnbalance(unittest.TestCase):
     def setUp(self) -> None:
         torch.manual_seed(0)
-        self.layer = SemiSyncLinear(Linear(4000, 4000), group_list=None).to('cuda')
+        self.layer = SemisyncLinear(Linear(4000, 4000), group_list=None).to('cuda')
 
     def testGroup(self):
         expected = [63 * i for i in range(64)] + [4000]
