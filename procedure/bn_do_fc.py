@@ -4,7 +4,7 @@ import pickle
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from models.batchnorm_drouput_with_vgg16 import Batchnorm_drouput_with_vgg16 as vgg16
+from models.batchnorm_dropout_with_vgg16 import Batchnorm_drouput_with_vgg16 as vgg16
 from layers.static import Rotatable
 import preprocess
 # タイムスタンプ
