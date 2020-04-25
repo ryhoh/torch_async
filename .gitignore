@@ -159,3 +159,5 @@ penv/
 *.csv
 /runs
 /log
+/imagenet-a
+*.ipynb
