@@ -1,17 +1,12 @@
+import _parent
 import pickle
-
 import pandas as pd
-
 import torch
 import torch.nn as nn
-from torch.nn.modules import Linear
 import torch.optim as optim
-
 from torchvision.models import vgg
-
-from procedure import preprocess
-from layers.static import *
-from models.dense import SimpleMLP, FeatureClassifyMLP, FeatureClassifyMLPFrontVer
+from layers.static import Rotatable, OptimizedSemiSyncLinear
+import preprocess
 
 
 GPU_ENABLED = False
@@ -93,7 +88,8 @@ def conduct(model: nn.Module, train_loader, test_loader) -> dict:
             # forward - backward - optimize
             outputs = model(in_tensor)
             loss_vector = loss_layer(outputs, label_tensor)  # for evaluation
-            reduced_loss = loss_layer_reduce(outputs, label_tensor)  # for backward
+            reduced_loss = loss_layer_reduce(
+                outputs, label_tensor)  # for backward
             _, predicted = torch.max(outputs.data, 1)
 
             reduced_loss.backward()
@@ -172,34 +168,24 @@ if __name__ == '__main__':
         torch.manual_seed(0)
 
         model = vgg.vgg16()
-        # model = FeatureClassifyMLPFrontVer()
-        #
-        # if semisync:
-        #     for layer_i in (0, 3):
-        #         models.classifier[layer_i] = SemiSyncLinear(models.classifier[layer_i])
-        #
-        # if GPU_ENABLED:
-        #     models.to('cuda')
-        #
-        if semisync:
-        #     targets = [0]
-        #     for target in targets:
-        #         model.classifier[target] = OptimizedContinuousLinear(model.classifier[target])
 
+        if GPU_ENABLED:
+            model.to('cuda')
+        if semisync:
             model.classifier[0] = OptimizedSemiSyncLinear(model.classifier[0])
             model.classifier[3] = OptimizedSemiSyncLinear(model.classifier[3])
 
         print(model)
 
-        # model.train()
-        # record = conduct(model, *(preprocess.mnist_loaders()))
-        #
-        # pd.DataFrame({
-        #     'train_loss':     record['train_loss'],
-        #     'train_accuracy': record['train_accuracy'],
-        # }).to_csv("semisync_" + str(semisync) + "_train.csv")
-        #
-        # pd.DataFrame({
-        #     'validation_loss':     record['validation_loss'],
-        #     'validation_accuracy': record['validation_accuracy'],
-        # }).to_csv("semisync_" + str(semisync) + "_valid.csv")
+        model.train()
+        record = conduct(model, *(preprocess.cifar_10_for_vgg_loaders()))
+
+        pd.DataFrame({
+            'train_loss':     record['train_loss'],
+            'train_accuracy': record['train_accuracy'],
+        }).to_csv("semisync_" + str(semisync) + "_train.csv")
+
+        pd.DataFrame({
+            'validation_loss':     record['validation_loss'],
+            'validation_accuracy': record['validation_accuracy'],
+        }).to_csv("semisync_" + str(semisync) + "_valid.csv")

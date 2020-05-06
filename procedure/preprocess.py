@@ -1,7 +1,5 @@
 from typing import Tuple
-
 from PIL import Image
-
 from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10, MNIST, FashionMNIST
 from torchvision import transforms
