@@ -1,4 +1,5 @@
-import pickle
+import sys
+from typing import Tuple
 
 import pandas as pd
 
@@ -6,144 +7,123 @@ import torch
 import torch.nn as nn
 from torch.nn.modules import Linear
 import torch.optim as optim
-
+from torch.utils.data import DataLoader
 from torchvision.models import vgg
 
 from procedure import preprocess
-from layers.static import *
-from models.dense import SimpleMLP, FeatureClassifyMLP, FeatureClassifyMLPFrontVer
+from layers import SemisyncLinear, SequentialLinear, Rotatable
 
 
-GPU_ENABLED = False
+GPU_ENABLED = True
+device = "cuda:1"
 
 
-def write_record(records: dict, epoch: int):
-    pd.DataFrame({
-        'train_loss': records['train_loss'],
-        'train_accuracy': records['train_accuracy'],
-    }).to_csv("semisync_" + str(epoch) + "_train.csv")
-
-    pd.DataFrame({
-        'validation_loss': records['validation_loss'],
-        'validation_accuracy': records['validation_accuracy'],
-    }).to_csv("semisync_" + str(epoch) + "_valid.csv")
+def rotate_all(learner: dict):
+    for layer in learner['model'].classifier:
+        if isinstance(layer, Rotatable):
+            layer.rotate()
 
 
-def conduct(model: nn.Module, train_loader, test_loader) -> dict:
-    def rotate_all():
-        # try:
-        #     layers = model.classifier
-        # except AttributeError:
-        #     layers = model
-        #
-        # for layer in layers:
-        #     if isinstance(layer, Rotatable):
-        #         layer.rotate()
-        #
-        # assert list(loss_vector.size()) == [mini_batch_size]
-
-        try:
-            for layer in model.features:
-                if isinstance(layer, Rotatable):
-                    layer.rotate()
-        except AttributeError:
-            pass
-
-    def post_epoch():
-        pass
-
+def conduct(model: nn.Module, train_loader: DataLoader, test_loader: DataLoader) -> dict:
     records = {
         'train_loss': [],
         'validation_loss': [],
         'train_accuracy': [],
         'validation_accuracy': [],
     }
+    learner = {
+        'model': model,
+        'loss_layer_reduce': nn.CrossEntropyLoss(),
+        'loss_layer': nn.CrossEntropyLoss(reduction='none'),
+        'optimizer': optim.SGD(model.parameters(), lr=0.001, momentum=0),
+    }
+    dataset = {
+        'train': train_loader,
+        'test': test_loader,
+        'length': len(train_loader.dataset),
+    }
 
-    loss_layer = nn.CrossEntropyLoss(reduction='none')
-    loss_layer_reduce = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-
-    data_n = len(train_loader.dataset)
-
-    # validation of pre_training
-    validate(model, test_loader, records)
+    # 全く学習していない状態で測定
+    records = validate(learner, dataset, records)
 
     # training
     for epoch in range(100):
-        total_loss = 0.0
-        total_correct = 0
+        learner, records = run_epoch(learner, dataset['train'], dataset['length'], records, epoch)
 
-        for i, mini_batch in enumerate(train_loader):
-            input_data, label_data = mini_batch
-            mini_batch_size = list(input_data.size())[0]
-
-            if GPU_ENABLED:
-                in_tensor = input_data.to('cuda')
-                label_tensor = label_data.to('cuda')
-            else:
-                in_tensor = input_data
-                label_tensor = label_data
-
-            if i == 0:
-                print("epoch started")
-                print("mini_batch_size:", mini_batch_size)
-
-            optimizer.zero_grad()  # Optimizer を0で初期化
-
-            # forward - backward - optimize
-            outputs = model(in_tensor)
-            loss_vector = loss_layer(outputs, label_tensor)  # for evaluation
-            reduced_loss = loss_layer_reduce(outputs, label_tensor)  # for backward
-            _, predicted = torch.max(outputs.data, 1)
-
-            reduced_loss.backward()
-            optimizer.step()
-
-            rotate_all()
-
-            total_loss += loss_vector.data.sum().item()
-            total_correct += (predicted.to('cpu') == label_data).sum().item()
-
-            if i % 2000 == 1999:
-                print('[%d, %5d] loss: %.3f' %
-                      (epoch + 1, i + 1, reduced_loss.item()))
-                # running_loss = 0.0
-
-        # end of epoch
-        records['train_loss'].append(total_loss / data_n)
-        records['train_accuracy'].append(total_correct / data_n)
-        validate(model, test_loader, records)
-        save(model)
-
-        # rotate_all()
-
-        if epoch % 20 == 0:
-            write_record(records, epoch)
+        # 測定
+        records = validate(learner, dataset, records)
 
     print('Finished Training')
     return records
 
 
-def validate(model: nn.Module, test_loader, records: dict):
+def run_epoch(learner: dict, train_loader: DataLoader, data_n: int,
+              records: dict, epoch: int) -> Tuple[dict, dict]:
+    learner['model'].train()
+    total_loss = 0.0
+    total_correct = 0
+
+    for i, mini_batch in enumerate(train_loader):
+        input_data, label_data = mini_batch
+        # mini_batch_size = list(input_data.size())[0]
+
+        if GPU_ENABLED:
+            in_tensor = input_data.to(device)
+            label_tensor = label_data.to(device)
+        else:
+            in_tensor = input_data
+            label_tensor = label_data
+
+        if i == 0:
+            print("epoch%04d started" % epoch)
+
+        learner['optimizer'].zero_grad()  # Optimizer を0で初期化
+
+        # forward - backward - optimize
+        outputs = learner['model'](in_tensor)
+        loss_vector = learner['loss_layer'](outputs, label_tensor)  # for evaluation
+        reduced_loss = learner['loss_layer_reduce'](outputs, label_tensor)  # for backward
+        _, predicted = torch.max(outputs.data, 1)
+
+        reduced_loss.backward()
+        learner['optimizer'].step()
+
+        total_loss += loss_vector.data.sum().item()
+        total_correct += (predicted.to('cpu') == label_data).sum().item()
+
+        if i % 200 == 199:
+            print('[%d, %5d] loss: %.3f' %
+                  (epoch + 1, i + 1, reduced_loss.item()))
+
+        # 準同期式のグループ交代
+        rotate_all(learner)
+
+    records['train_loss'].append(total_loss / data_n)
+    records['train_accuracy'].append(total_correct / data_n)
+
+    return learner, records
+
+
+def validate(learner: dict, dataset: dict, records: dict) -> dict:
     with torch.no_grad():
         loss_layer = nn.CrossEntropyLoss(reduction='none')
 
         total_correct = 0
         total_loss = 0.0
-        data_n = len(test_loader.dataset)
+        data_n = len(dataset['test'].dataset)
 
-        for mini_batch in test_loader:
+        for mini_batch in dataset['test']:
             input_data, label_data = mini_batch
             mini_batch_size = list(input_data.size())[0]
 
             if GPU_ENABLED:
-                in_tensor = input_data.to('cuda')
-                label_tensor = label_data.to('cuda')
+                in_tensor = input_data.to(device)
+                label_tensor = label_data.to(device)
             else:
                 in_tensor = input_data
                 label_tensor = label_data
 
-            outputs = model(in_tensor)
+            outputs = learner['model'](in_tensor)
             loss_vector = loss_layer(outputs, label_tensor)
             _, predicted = torch.max(outputs.data, 1)
 
@@ -160,46 +140,53 @@ def validate(model: nn.Module, test_loader, records: dict):
         ))
         records['validation_loss'].append(loss_per_record)
         records['validation_accuracy'].append(accuracy)
+    
+    return records
 
 
-def save(model: nn.Module):
-    with open("models.pkl", 'wb') as f:
-        pickle.dump(model, f)
+def write_final_record(records: dict, group_size: int) -> None:
+    case = {4096: "Linear", 64: "Semisync", 1: "Sequential"}
+
+    pd.DataFrame({
+        'train_loss': records['train_loss'],
+        'train_accuracy': records['train_accuracy'],
+    }).to_csv(case[group_size] + "_train.csv")
+
+    pd.DataFrame({
+        'validation_loss': records['validation_loss'],
+        'validation_accuracy': records['validation_accuracy'],
+    }).to_csv(case[group_size] + "_valid.csv")
 
 
 if __name__ == '__main__':
-    for semisync in (True,):
-        torch.manual_seed(0)
+    seed = int(sys.argv[1])
+    print("seed =", seed)
 
-        model = vgg.vgg16()
-        # model = FeatureClassifyMLPFrontVer()
-        #
-        # if semisync:
-        #     for layer_i in (0, 3):
-        #         models.classifier[layer_i] = SemiSyncLinear(models.classifier[layer_i])
-        #
-        # if GPU_ENABLED:
-        #     models.to('cuda')
-        #
-        if semisync:
-        #     targets = [0]
-        #     for target in targets:
-        #         model.classifier[target] = OptimizedContinuousLinear(model.classifier[target])
+    for N in (1, 64, 4096):
+        torch.manual_seed(seed)
+        myvgg = vgg.vgg16()
 
-            model.classifier[0] = OptimizedSemiSyncLinear(model.classifier[0])
-            model.classifier[3] = OptimizedSemiSyncLinear(model.classifier[3])
+        assert isinstance(myvgg.classifier[0], Linear)
+        assert isinstance(myvgg.classifier[3], Linear)
+        if N == 1:  # 逐次
+            myvgg.classifier[0] = SequentialLinear(myvgg.classifier[0])
+            myvgg.classifier[3] = SequentialLinear(myvgg.classifier[3])
+        elif N == 64:  # 準同期
+            myvgg.classifier[0] = SemisyncLinear(myvgg.classifier[0])
+            myvgg.classifier[3] = SemisyncLinear(myvgg.classifier[3])
 
-        print(model)
+        myvgg.classifier[-1] = Linear(4096, 10)
 
-        # model.train()
-        # record = conduct(model, *(preprocess.mnist_loaders()))
-        #
-        # pd.DataFrame({
-        #     'train_loss':     record['train_loss'],
-        #     'train_accuracy': record['train_accuracy'],
-        # }).to_csv("semisync_" + str(semisync) + "_train.csv")
-        #
-        # pd.DataFrame({
-        #     'validation_loss':     record['validation_loss'],
-        #     'validation_accuracy': record['validation_accuracy'],
-        # }).to_csv("semisync_" + str(semisync) + "_valid.csv")
+        # Dropout 抜き
+        myvgg.classifier = nn.Sequential(
+            myvgg.classifier[0],  # Linear  (Semi)
+            myvgg.classifier[1],  # ReLU
+            myvgg.classifier[3],  # Linear  (Semi)
+            myvgg.classifier[4],  # ReLU
+            myvgg.classifier[6],  # Linear
+        )
+
+        print(myvgg)
+        myvgg.to(device)
+        record = conduct(myvgg, *(preprocess.cifar_10_for_vgg_loaders()))
+        write_final_record(record, N)
