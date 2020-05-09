@@ -158,8 +158,7 @@ def write_final_record(records: dict, group_size: int) -> None:
     }).to_csv(case[group_size] + "_valid.csv")
 
 
-if __name__ == '__main__':
-    seed = int(sys.argv[1])
+def main(seed: int):
     print("seed =", seed)
 
     for N in (1, 64, 4096):
@@ -190,3 +189,8 @@ if __name__ == '__main__':
         myvgg.to(device)
         record = conduct(myvgg, *(preprocess.cifar_10_for_vgg_loaders()))
         write_final_record(record, N)
+
+
+if __name__ == '__main__':
+    seed = int(sys.argv[1])
+    main(seed)
