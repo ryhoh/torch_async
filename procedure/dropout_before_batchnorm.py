@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(description=TITLE)
 parser.add_argument("--convolution",
                     choices=["vgg_with_maxpool", "vgg_without_maxpool"],
                     help="convolution type", required=True)
-parser.add_argument("-p", "pooling", choices=["max", "average"],
+parser.add_argument("-p", "--pooling", choices=["max", "average"],
                     help="pooling type", required=True)
 parser.add_argument("--fc", choices=["none", "normal", "semi"],
                     help="fully connected type", required=True)
@@ -56,7 +56,7 @@ MODEL_NAME = "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_dropout_before_batchnorm".format(
     ARGS.seed,
     ARGS.cnn_bn_flag,
     ARGS.fc_bn_flag,
-    ARGS.fc_dr_flag
+    ARGS.fc_do_flag
 )
 WRITER = SummaryWriter("runs/" + MODEL_NAME)
 

@@ -44,7 +44,7 @@ parser.add_argument("--seed", type=int, metavar="N", help="random seed")
 
 parser.add_argument("--cnn_bn_flag", action="store_true", help="flag for cnn batchnorm")
 parser.add_argument("--fc_bn_flag", action="store_true", help="flag for fc batchnorm")
-parser.add_argument("--fc_dr_flag", action="store_true", help="flag for fc dropout")
+parser.add_argument("--fc_do_flag", action="store_true", help="flag for fc dropout")
 parser.add_argument("--nogpu", action="store_true", help="GPU_DISABLED")
 ARGS = parser.parse_args()
 
@@ -60,7 +60,7 @@ MODEL_NAME = "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_convolution_among_cnnbn_fcbn_fcdr
     ARGS.seed,
     ARGS.cnn_bn_flag,
     ARGS.fc_bn_flag,
-    ARGS.fc_dr_flag
+    ARGS.fc_do_flag
 )
 WRITER = SummaryWriter("runs/" + MODEL_NAME)
 
