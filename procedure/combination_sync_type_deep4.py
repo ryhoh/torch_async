@@ -3,7 +3,7 @@ import pickle
 import torch
 from torch.nn import CrossEntropyLoss
 from torch.optim import SGD
-from models.stripe4_semi_VGG16 import Stripe4_semi_VGG16 as vgg16
+from models.stripe4_semi_vgg16 import Stripe4_semi_VGG16 as vgg16
 from layers.static import Rotatable
 import preprocess
 # ランダムシード

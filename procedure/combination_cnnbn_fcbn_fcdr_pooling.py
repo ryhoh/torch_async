@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(description=TITLE)
 parser.add_argument("--convolution",
                     choices=["vgg_with_maxpool", "vgg_without_maxpool"],
                     help="convolution type", required=True)
-parser.add_argument("-p", "pooling", choices=["max", "average"],
+parser.add_argument("-p", "--pooling", choices=["max", "average"],
                     help="pooling type", required=True)
 parser.add_argument("--poolingshape", default=7, type=int, metavar="N",
                     help="pooling層の出力サイズ")
