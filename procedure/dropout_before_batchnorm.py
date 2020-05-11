@@ -82,7 +82,7 @@ def mkdirs(path):
         makedirs(path)
 
 
-def save(data, name, task):
+def save(data, name, type):
     """ 保存する
 
     data: 保存対象のデータ
@@ -95,7 +95,7 @@ def save(data, name, task):
 
     mkdirs(save_dir)
 
-    if task == "model":
+    if type == "model":
         """ モデルのパラメータを保存
 
         Memo: ロードする方法
@@ -104,7 +104,7 @@ def save(data, name, task):
         model.eval()
         """
         torch.save(data.state_dict(), join(save_dir, name+'.model'))
-    elif task == "prediction":
+    elif type == "prediction":
         """ 予測値
 
         Model: ロードする方法
@@ -281,7 +281,7 @@ def main():
         evaluate(epoch, model, eval_dataloader,
                  criterion_sum=criterion_sum, criterion_mean=criterion_mean)
     # 学習結果を記録
-    save(data=model, name=MODEL_NAME, task="model")
+    save(data=model, name=MODEL_NAME, type="model")
 
 
 if __name__ == "__main__":
