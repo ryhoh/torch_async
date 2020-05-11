@@ -272,7 +272,7 @@ def main():
     evaluate(-1, model, eval_dataloader,
              criterion_sum=criterion_sum, criterion_mean=criterion_mean)
     # 学習
-    for epoch in range(ARGS.epoch):
+    for epoch in range(ARGS.epochs):
         train(epoch, model, train_dataloader, optimizer,
               criterion_sum=criterion_sum, criterion_mean=criterion_mean)
         evaluate(epoch, model, eval_dataloader,
