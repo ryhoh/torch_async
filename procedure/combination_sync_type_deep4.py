@@ -265,12 +265,8 @@ def main():
     optimizer = SGD(model.parameters(), 0.001, momentum=0.9)
 
     # dataloader
-    if ARGS.seed is not None:
-        train_dataloader, eval_dataloader = preprocess.cifar10_dataloader(
-            random_seed=ARGS.seed, batch_size=100)
-    else:
-        train_dataloader, eval_dataloader = preprocess.cifar10_dataloader(
-            batch_size=100)
+    train_dataloader, eval_dataloader = preprocess.cifar10_dataloader(
+        random_seed=ARGS.seed, batch_size=100)
 
     # 評価
     evaluate(-1, model, eval_dataloader,
