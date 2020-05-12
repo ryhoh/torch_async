@@ -266,7 +266,7 @@ def main():
 
     # dataloader
     train_dataloader, eval_dataloader = preprocess.cifar10_dataloader(
-        random_seed=ARGS.seed, batch_size=100)
+        random_seed=ARGS.seed, batch_size=32)
 
     # 評価
     evaluate(-1, model, eval_dataloader,
