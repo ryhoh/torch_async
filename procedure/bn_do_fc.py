@@ -32,6 +32,8 @@ parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--deepness', default=2, type=int, metavar='N',
                     help='number of fc layer deepness')
+parser.add_argument('--seed', default=0, type=int, metavar='N',
+                    help='random seed', required=True)
 
 parser.add_argument('--cnn_bn_flag', action='store_true', help='flag for cnn bn')
 parser.add_argument('--fc_bn_flag', action='store_true', help='flag for fc bn')
@@ -40,7 +42,7 @@ parser.add_argument('--fc_do_flag', action='store_true', help='flag for fc dropo
 args = parser.parse_args()
 
 now = datetime.datetime.now()
-MODEL_NAME = "{}_{}_{}_{}_{}_{}_{}_{}_{}_hori_modif_batchnom_dropout".format(
+MODEL_NAME = "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_hori_modif_batchnom_dropout".format(
     now.strftime("%Y-%m-%d_%H-%M-%S"),
     args.convolution,
     args.pooling,
@@ -49,7 +51,8 @@ MODEL_NAME = "{}_{}_{}_{}_{}_{}_{}_{}_{}_hori_modif_batchnom_dropout".format(
     args.deepness,
     args.cnn_bn_flag,
     args.fc_bn_flag,
-    args.fc_do_flag
+    args.fc_do_flag,
+    args.seed
 )
 writer = SummaryWriter('runs/' + MODEL_NAME)
 
@@ -244,7 +247,7 @@ def save(data, name, type):
 
 
 if __name__ == '__main__':
-    torch.manual_seed(0)
+    torch.manual_seed(args.seed)
     model = vgg16(
         num_classes=10, model_type=args.convolution, pooling=args.pooling,
         sync=args.fc, deepness=args.deepness, poolingshape=7,
