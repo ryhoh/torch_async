@@ -212,7 +212,7 @@ def train(epoch):
             # 推論
             outputs = MODEL(inputs)
             # loss
-            loss = CRITERION_MEAN(outputs, labels).item()  # backprop/update用
+            loss = CRITERION_MEAN(outputs, labels)  # backprop/update用
             loss_sum += CRITERION_SUM(outputs, labels).item()  # 記録用
             # accuracy
             _, argmax = torch.max(outputs, 1)
@@ -234,7 +234,7 @@ def train(epoch):
                   'Loss {loss:.3f}\t'
                   'Accuracy: {accuracy:.3f}'.format(
                    epoch, i, len(TRAIN_LOADER),
-                   loss=loss,
+                   loss=loss.item(),
                    accuracy=accuracy/len(outputs)))
         # output log to tensorboard
         WRITER.add_scalar('train loss',
