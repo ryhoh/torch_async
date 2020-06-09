@@ -1,0 +1,12 @@
+version: '2.3'
+services:
+  batch:
+    build: .
+    shm_size: 13g
+    volumes:
+      - ../:/work
+    working_dir: /work
+    runtime: nvidia
+    tty: true
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
