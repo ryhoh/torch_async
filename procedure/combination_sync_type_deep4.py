@@ -238,7 +238,7 @@ if __name__ == "__main__":
 
     """ モデル"""
     # モデル
-    model = vgg16(num_classes=10, first_async=ARGS.first_async,
+    MODEL = vgg16(num_classes=10, first_async=ARGS.first_async,
                   second_async=ARGS.second_async, third_async=ARGS.third_async,
                   fourth_async=ARGS.fourth_async).to(DEVICE)
 
