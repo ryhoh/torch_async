@@ -8,9 +8,8 @@ from layers.static import OptimizedSemiSyncLinear
 
 class Stripe4_semi_VGG16(nn.Module):
     def __init__(self,
-                 num_classes=100, model_type="vgg_without_maxpool",
-                 pooling="average", poolingshape=7, middleshape=4096,
-                 dropout_prob=0.5, bnflag=True, first_async=True,
+                 num_classes=100, poolingshape=7, middleshape=4096,
+                 dropout_prob=0.5, first_async=True,
                  second_async=True, third_async=True,
                  fourth_async=True):
         super(Stripe4_semi_VGG16, self).__init__()
@@ -21,16 +20,11 @@ class Stripe4_semi_VGG16(nn.Module):
         }
 
         """ vgg16 """
-        vgg = vggmodel.VGG(vggmodel.make_layers(cfgs[model_type], batch_norm=bnflag))
+        vgg = vggmodel.VGG(vggmodel.make_layers(cfgs["vgg_with_maxpool"], batch_norm=False))
         self.vgg = nn.Sequential(*list(vgg.children())[:-2])
 
-        """ global average pooling or Max Pooling """
-        if pooling == "average":
-            self.pool = nn.AdaptiveAvgPool2d((poolingshape, poolingshape))
-        elif pooling == "max":
-            self.pool = nn.AdaptiveMaxPool2d((poolingshape, poolingshape))
-        else:
-            raise ValueError("poolingの値が不正です")
+        """ global average pooling"""
+        self.pool = nn.AdaptiveAvgPool2d((poolingshape, poolingshape))
 
         """ FCを定義"""
         in_shape = 512 * poolingshape * poolingshape
