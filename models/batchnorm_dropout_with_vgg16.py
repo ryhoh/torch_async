@@ -3,7 +3,7 @@ import torch.nn as nn
 from torchvision.models import vgg as vggmodel
 
 # 準同期式レイヤ
-from layers.static import OptimizedSemiSyncLinear
+from layers.static import SemisyncLinear
 
 
 class Batchnorm_drouput_with_vgg16(nn.Module):
@@ -52,7 +52,7 @@ class Batchnorm_drouput_with_vgg16(nn.Module):
             fc.append(nn.Linear(middleshape, num_classes))
 
         elif sync == "semi":
-            fc = [OptimizedSemiSyncLinear(nn.Linear(in_shape, middleshape))]
+            fc = [SemisyncLinear(nn.Linear(in_shape, middleshape))]
             if fc_bn_flag:
                 fc.append(nn.BatchNorm1d(middleshape))
             fc.append(nn.ReLU(middleshape))
@@ -61,7 +61,7 @@ class Batchnorm_drouput_with_vgg16(nn.Module):
 
             if deepness > 1:
                 for _ in range(deepness - 1):
-                    fc.append(OptimizedSemiSyncLinear(nn.Linear(middleshape, middleshape)))
+                    fc.append(SemisyncLinear(nn.Linear(middleshape, middleshape)))
                     if fc_bn_flag:
                         fc.append(nn.BatchNorm1d(middleshape))
                     fc.append(nn.ReLU(middleshape))

@@ -56,7 +56,7 @@ MODEL_NAME = "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_hori_modif_batchnom_dropout".format(
 )
 writer = SummaryWriter('runs/' + MODEL_NAME)
 
-GPU_ENABLED = True
+GPU_ENABLED = False
 
 
 def conduct(model: nn.Module, train_loader, test_loader) -> dict:
