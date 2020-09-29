@@ -84,9 +84,10 @@ class BasicBlock(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10):
+    def __init__(self, block, num_blocks, use_global_average_pooling, num_classes=10):
         super(ResNet, self).__init__()
         self.in_planes = 16
+        self.use_global_average_pooling = use_global_average_pooling
 
         self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(16)
@@ -111,34 +112,39 @@ class ResNet(nn.Module):
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
-        out = F.avg_pool2d(out, out.size()[3])
-        out = out.view(out.size(0), -1)
+        if self.use_global_average_pooling:
+            # print(out.size())  # (batchsize, 64, 8, 8)
+            out = F.avg_pool2d(out, out.size()[3])
+            out = out.view(out.size(0), -1)
+        else:
+            out = F.adaptive_avg_pool2d(out, (8, 8))
+            out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out
 
 
-def resnet20():
-    return ResNet(BasicBlock, [3, 3, 3])
+def resnet20(use_global_average_pooling):
+    return ResNet(BasicBlock, [3, 3, 3], use_global_average_pooling)
 
 
-def resnet32():
-    return ResNet(BasicBlock, [5, 5, 5])
+def resnet32(use_global_average_pooling):
+    return ResNet(BasicBlock, [5, 5, 5], use_global_average_pooling)
 
 
-def resnet44():
-    return ResNet(BasicBlock, [7, 7, 7])
+def resnet44(use_global_average_pooling):
+    return ResNet(BasicBlock, [7, 7, 7], use_global_average_pooling)
 
 
-def resnet56():
-    return ResNet(BasicBlock, [9, 9, 9])
+def resnet56(use_global_average_pooling):
+    return ResNet(BasicBlock, [9, 9, 9], use_global_average_pooling)
 
 
-def resnet110():
-    return ResNet(BasicBlock, [18, 18, 18])
+def resnet110(use_global_average_pooling):
+    return ResNet(BasicBlock, [18, 18, 18], use_global_average_pooling)
 
 
-def resnet1202():
-    return ResNet(BasicBlock, [200, 200, 200])
+def resnet1202(use_global_average_pooling):
+    return ResNet(BasicBlock, [200, 200, 200], use_global_average_pooling)
 
 
 def test(net):
