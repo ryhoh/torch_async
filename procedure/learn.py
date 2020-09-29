@@ -35,7 +35,7 @@ def conduct(model: nn.Module, train_loader: DataLoader, test_loader: DataLoader)
         'model': model,
         'loss_layer_reduce': nn.CrossEntropyLoss(),
         'loss_layer': nn.CrossEntropyLoss(reduction='none'),
-        'optimizer': optim.SGD(model.parameters(), lr=0.001, momentum=0),
+        'optimizer': optim.SGD(model.parameters(), lr=0.001, momentum=0.9),
     }
     dataset = {
         'train': train_loader,
