@@ -1,2 +1,5 @@
 torch_async/*
 .idea/*
+env/*
+*.pyc
+procedure/data/*
