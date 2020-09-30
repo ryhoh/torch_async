@@ -1,5 +1,5 @@
 import sys
-from typing import Tuple
+from typing import Tuple, Dict, Any
 
 import pandas as pd
 
@@ -18,7 +18,7 @@ class Learner(object):
 
     def __init__(self, model, train_loader, test_loader,
                  feature_params: list, fc_mid_params: list, fc_end_param,
-                 gpu_idx: int = None):
+                 staggered_update: bool, gpu_idx: int = None, detail: str = None):
         lr = 0.001
         momentum = 0.9
 
@@ -37,8 +37,8 @@ class Learner(object):
         }
         self.learner = {
             'model': model.to(self.device),
-            'loss_layer_reduce': nn.CrossEntropyLoss(),
-            'loss_layer': nn.CrossEntropyLoss(reduction='none'),
+            'loss_layer_accum': nn.CrossEntropyLoss(),
+            'loss_layer_score':  nn.CrossEntropyLoss(reduction='none'),
         }
 
         normal_optimizers = [
@@ -58,22 +58,14 @@ class Learner(object):
             'train': train_loader,
             'test':  test_loader,
             'train_length': len(train_loader.dataset),
-            'test_length':  len(train_loader.dataset),
+            'test_length':  len(test_loader.dataset),
         }
 
-        self.repr_str = ', '.join([
-            repr(model),
-            repr(train_loader),
-            repr(test_loader)
-        ])
-
-        if gpu_idx:
-            self.repr_str += ', ' + repr(gpu_idx)
+        self.staggered_update = staggered_update
+        self.staggered_idx = 0
+        self.detail = detail
 
     def __repr__(self):
-        return self.repr_str
-
-    def __str__(self):
         return r"""
 cumulative_rotational_update learner
 
@@ -96,125 +88,140 @@ r"""
 device:
 """ + str(self.device)
 
+    def __str__(self):
+        res = str(self.learner['model'].__class__.__name__),
+        if self.detail:
+            res += '_' + self.detail
 
+        return res
 
+    def run(self, epochs: int):
+        # 全く学習していない状態で測定
+        self.validate()
 
-#     def conduct(self, model: nn.Module, train_loader: DataLoader, test_loader: DataLoader) -> dict:
-#         # 全く学習していない状態で測定
-#         self.validate()
-#
-#         # training
-#         for epoch in range(100):
-#             learner, records = self.run_epoch(learner, dataset['train'], dataset['length'], records, epoch)
-#
-#             # 測定
-#             records = validate(learner, dataset, records)
-#
-#         print('Finished Training')
-#         return records
-#
-#
-# def run_epoch(learner: dict, train_loader: DataLoader, data_n: int,
-#               records: dict, epoch: int) -> Tuple[dict, dict]:
-#     learner['model'].train()
-#     total_loss = 0.0
-#     total_correct = 0
-#
-#     for i, mini_batch in enumerate(train_loader):
-#         input_data, label_data = mini_batch
-#         # mini_batch_size = list(input_data.size())[0]
-#
-#         if GPU_ENABLED:
-#             in_tensor = input_data.to(device)
-#             label_tensor = label_data.to(device)
-#         else:
-#             in_tensor = input_data
-#             label_tensor = label_data
-#
-#         if i == 0:
-#             print("epoch%04d started" % epoch)
-#
-#         learner['optimizer'].zero_grad()  # Optimizer を0で初期化
-#
-#         # forward - backward - optimize
-#         outputs = learner['model'](in_tensor)
-#         loss_vector = learner['loss_layer'](outputs, label_tensor)  # for evaluation
-#         reduced_loss = learner['loss_layer_reduce'](outputs, label_tensor)  # for backward
-#         _, predicted = torch.max(outputs.data, 1)
-#
-#         reduced_loss.backward()
-#         learner['optimizer'].step()
-#
-#         total_loss += loss_vector.data.sum().item()
-#         total_correct += (predicted.to('cpu') == label_data).sum().item()
-#
-#         if i % 200 == 199:
-#             print('[%d, %5d] loss: %.3f' %
-#                   (epoch + 1, i + 1, reduced_loss.item()))
-#
-#         # 準同期式のグループ交代
-#         rotate_all(learner)
-#
-#     records['train_loss'].append(total_loss / data_n)
-#     records['train_accuracy'].append(total_correct / data_n)
-#
-#     return learner, records
-#
-#
-#     def validate(self, learner: dict, dataset: dict, records: dict) -> dict:
-#         with torch.no_grad():
-#             loss_layer = nn.CrossEntropyLoss(reduction='none')
-#
-#             total_correct = 0
-#             total_loss = 0.0
-#             data_n = len(dataset['test'].dataset)
-#
-#             for mini_batch in dataset['test']:
-#                 input_data, label_data = mini_batch
-#                 mini_batch_size = list(input_data.size())[0]
-#
-#                 if GPU_ENABLED:
-#                     in_tensor = input_data.to(device)
-#                     label_tensor = label_data.to(device)
-#                 else:
-#                     in_tensor = input_data
-#                     label_tensor = label_data
-#
-#                 outputs = learner['model'](in_tensor)
-#                 loss_vector = loss_layer(outputs, label_tensor)
-#                 _, predicted = torch.max(outputs.data, 1)
-#
-#                 assert list(loss_vector.size()) == [mini_batch_size]
-#
-#                 total_correct += (predicted.to('cpu') == label_data).sum().item()
-#                 total_loss += loss_vector.sum().item()
-#
-#             accuracy = total_correct / data_n
-#             loss_per_record = total_loss / data_n
-#             print('Loss: {:.3f}, Accuracy: {:.3f}'.format(
-#                 loss_per_record,
-#                 accuracy
-#             ))
-#             records['validation_loss'].append(loss_per_record)
-#             records['validation_accuracy'].append(accuracy)
-#
-#         return records
-#
-#
-# def write_final_record(records: dict, group_size: int) -> None:
-#     case = {4096: "Linear", 64: "Semisync", 1: "Sequential"}
-#
-#     pd.DataFrame({
-#         'train_loss': records['train_loss'],
-#         'train_accuracy': records['train_accuracy'],
-#     }).to_csv(case[group_size] + "_train.csv")
-#
-#     pd.DataFrame({
-#         'validation_loss': records['validation_loss'],
-#         'validation_accuracy': records['validation_accuracy'],
-#     }).to_csv(case[group_size] + "_valid.csv")
-#
-#
+        for epoch in range(epochs):
+            sys.stderr.write("epoch%04d started" % epoch)
+            self.run_epoch()
+            self.validate()
+
+        self.write_final_record()
+
+    def run_epoch(self):
+        self.learner['model'].train()
+        data_n = self.dataset['train_length']
+        total_loss = 0.0
+        total_correct = 0
+
+        for i, mini_batch in enumerate(self.dataset['train_loader']):
+            in_tensor, label_tensor = mini_batch
+            in_tensor = in_tensor.to(self.device)
+            label_tensor = label_tensor.to(self.device)
+
+            # forward
+            forward_result = self._forward(
+                self.learner['model'], in_tensor, label_tensor,
+                [self.learner['loss_layer_accum'], [self.learner['loss_layer_score']]]
+            )
+            loss_vector = forward_result['loss'][1]  # for accumulated loss
+            reduced_loss = forward_result['loss'][0]  # for score evaluation
+            predicted = forward_result['predicted']
+
+            reduced_loss.backward()
+            self._optimize_step()
+
+            total_correct += self._correct_sum(predicted, label_tensor)
+            total_loss += self._loss_sum(loss_vector)
+
+            # progressbar here...
+
+        self.records['train_loss'].append(total_loss / data_n)
+        self.records['train_accuracy'].append(total_correct / data_n)
+
+    def validate(self):
+        self.learner['model'].eval()
+        with torch.no_grad():
+            total_correct = 0
+            total_loss = 0.0
+            data_n = self.dataset['test_length']
+
+            for mini_batch in self.dataset['test']:
+                in_tensor, label_tensor = mini_batch
+                mini_batch_size = list(in_tensor.size())[0]
+
+                in_tensor = in_tensor.to(self.device)
+                label_tensor = label_tensor.to(self.device)
+
+                forward_result = self._forward(
+                    self.learner['model'], in_tensor, label_tensor, [self.learner['loss_layer_score']]
+                )
+                loss_vector = forward_result['loss'][0]
+                predicted = forward_result['predicted']
+                assert list(loss_vector.size()) == [mini_batch_size]
+
+                total_correct += self._correct_sum(predicted, label_tensor)
+                total_loss += self._loss_sum(loss_vector)
+
+            accuracy = total_correct / data_n
+            loss_per_record = total_loss / data_n
+            sys.stderr.write('Loss: {:.3f}, Accuracy: {:.3f}'.format(
+                loss_per_record,
+                accuracy
+            ))
+            self.records['validation_loss'].append(loss_per_record)
+            self.records['validation_accuracy'].append(accuracy)
+
+    def write_final_record(self):
+        pd.DataFrame({
+            'train_loss': self.records['train_loss'],
+            'train_accuracy': self.records['train_accuracy'],
+        }).to_csv(str(self) + "_train.csv")
+
+        pd.DataFrame({
+            'validation_loss': self.records['validation_loss'],
+            'validation_accuracy': self.records['validation_accuracy'],
+        }).to_csv(str(self) + "_valid.csv")
+
+    def _optimize_step(self):
+        # staggered 非適応のパラメータ
+        for optimizer in self.optimizers['normal_optimizers']:
+            optimizer.step()
+            optimizer.zero_grad()
+
+        if self.staggered_update:
+            # staggered 適応のパラメータ
+            selected_optimizer = self.optimizers['staggered_optimizers'][self.staggered_idx]
+            selected_optimizer.step()
+            selected_optimizer.zero_grad()
+
+            self.staggered_idx = self.staggered_idx + 1 \
+                if self.staggered_idx != len(self.optimizers['staggered_optimizers']) else 0
+
+        else:  # normal update
+            for optimizer in self.optimizers['staggered_optimizers']:
+                optimizer.step()
+                optimizer.zero_grad()
+
+    r"""
+    評価用，勾配計算用の複数の誤差レイヤに対してフォワード
+    """
+    @staticmethod
+    def _forward(model, in_tensor, label_tensor, loss_layers: list) -> Dict[str, Any]:
+        outputs = model(in_tensor)
+        _, predicted = torch.max(outputs.data, 1)
+
+        return {
+            'loss': tuple(loss_layer(outputs, label_tensor) for loss_layer in loss_layers),
+            'predicted': predicted.to('cpu'),
+        }
+
+    @staticmethod
+    def _correct_sum(predicted: torch.Tensor, label_tensor: torch.Tensor) -> float:
+        return (predicted.to('cpu') == label_tensor.to('cpu')).sum().item()
+
+    @staticmethod
+    def _loss_sum(loss_vector):
+        return loss_vector.sum().item()
+
 # def main(seed: int):
 #     print("seed =", seed)
 #
