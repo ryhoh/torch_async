@@ -1,14 +1,13 @@
 import sys
-from typing import Tuple, Dict, Any
+from typing import Dict, Any
 
 import pandas as pd
 
 import torch
 import torch.nn as nn
-from torch.nn.modules import Linear
 import torch.optim as optim
 from torch.utils.data import DataLoader
-# from torchvision.models import vgg
+from awesome_progress_bar import ProgressBar
 
 from procedure import preprocess
 from models import resnet110
@@ -111,13 +110,13 @@ device:
         data_n = self.dataset['train_length']
         total_loss = 0.0
         total_correct = 0
+        progressbar = ProgressBar(len(self.dataset['train_loader']))
 
         for i, mini_batch in enumerate(self.dataset['train_loader']):
             in_tensor, label_tensor = mini_batch
             in_tensor = in_tensor.to(self.device)
             label_tensor = label_tensor.to(self.device)
 
-            # forward
             forward_result = self._forward(
                 self.learner['model'], in_tensor, label_tensor,
                 [self.learner['loss_layer_accum'], [self.learner['loss_layer_score']]]
@@ -132,8 +131,9 @@ device:
             total_correct += self._correct_sum(predicted, label_tensor)
             total_loss += self._loss_sum(loss_vector)
 
-            # progressbar here...
+            progressbar.iter()
 
+        progressbar.wait()
         self.records['train_loss'].append(total_loss / data_n)
         self.records['train_accuracy'].append(total_correct / data_n)
 
@@ -172,12 +172,12 @@ device:
 
     def write_final_record(self):
         pd.DataFrame({
-            'train_loss': self.records['train_loss'],
+            'train_loss':     self.records['train_loss'],
             'train_accuracy': self.records['train_accuracy'],
         }).to_csv(str(self) + "_train.csv")
 
         pd.DataFrame({
-            'validation_loss': self.records['validation_loss'],
+            'validation_loss':     self.records['validation_loss'],
             'validation_accuracy': self.records['validation_accuracy'],
         }).to_csv(str(self) + "_valid.csv")
 
