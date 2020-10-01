@@ -1,11 +1,12 @@
 import sys
-from typing import Dict, Any
+from typing import Dict, Any, Tuple, List
 
 import pandas as pd
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.nn.modules import Linear, ReLU, Dropout
 from torch.utils.data import DataLoader
 from awesome_progress_bar import ProgressBar
 
@@ -13,13 +14,31 @@ from procedure import preprocess
 from models import resnet110
 
 
-class Learner(object):
+lr = 0.001
+momentum = 0.9
 
+
+class StaggeredUpdateController(object):
+    r"""
+    1レイヤの更新をコントロールする
+    長さ1の配列を渡せば従来法と同じ動作，それより大きい配列で Staggered する
+    """
+    def __init__(self, optimizers: List[torch.optim.Optimizer]):
+        self.optimizers = optimizers
+        self.idx = 0
+
+    def step(self):
+        self.optimizers[self.idx].step()
+        self.optimizers[self.idx].zero_grad()
+
+    def rotate(self):
+        self.idx = self.idx + 1 if self.idx + 1 != len(self.optimizers) else 0
+
+
+class Learner(object):
     def __init__(self, model, train_loader, test_loader,
-                 feature_params: list, fc_mid_params: list, fc_end_param,
+                 feature_params: list, fc_mid_controllers: List[StaggeredUpdateController], fc_end_param,
                  staggered_update: bool, gpu_idx: int = None, detail: str = None):
-        lr = 0.001
-        momentum = 0.9
 
         if gpu_idx:
             self.GPU_ENABLED = True
@@ -45,13 +64,9 @@ class Learner(object):
             for feature_param in feature_params]
         normal_optimizers.append(optim.SGD(fc_end_param, lr=lr, momentum=momentum))
 
-        staggered_optimizers = [
-            optim.SGD(fc_mid_param, lr=lr, momentum=momentum)
-            for fc_mid_param in fc_mid_params]
-
         self.optimizers = {  # 重みごとに optimizer を使い分ける
             'normal_optimizers': normal_optimizers,
-            'staggered_optimizers': staggered_optimizers,
+            'staggered_controllers': fc_mid_controllers,
         }
         self.dataset = {
             'train': train_loader,
@@ -60,8 +75,6 @@ class Learner(object):
             'test_length':  len(test_loader.dataset),
         }
 
-        self.staggered_update = staggered_update
-        self.staggered_idx = 0
         self.detail = detail
 
     def __repr__(self):
@@ -88,7 +101,7 @@ device:
 """ + str(self.device)
 
     def __str__(self):
-        res = str(self.learner['model'].__class__.__name__),
+        res = self.learner['model'].__class__.__name__
         if self.detail:
             res += '_' + self.detail
 
@@ -163,7 +176,7 @@ device:
 
             accuracy = total_correct / data_n
             loss_per_record = total_loss / data_n
-            sys.stderr.write('Loss: {:.3f}, Accuracy: {:.3f}'.format(
+            sys.stderr.write('Loss: {:.3f}, Accuracy: {:.3f}\n'.format(
                 loss_per_record,
                 accuracy
             ))
@@ -187,19 +200,10 @@ device:
             optimizer.step()
             optimizer.zero_grad()
 
-        if self.staggered_update:
-            # staggered 適応のパラメータ
-            selected_optimizer = self.optimizers['staggered_optimizers'][self.staggered_idx]
-            selected_optimizer.step()
-            selected_optimizer.zero_grad()
-
-            self.staggered_idx = self.staggered_idx + 1 \
-                if self.staggered_idx != len(self.optimizers['staggered_optimizers']) else 0
-
-        else:  # normal update
-            for optimizer in self.optimizers['staggered_optimizers']:
-                optimizer.step()
-                optimizer.zero_grad()
+        # 全結合中間層
+        for controller in self.optimizers['staggered_controllers']:
+            controller.step()
+            controller.rotate()
 
     r"""
     評価用，勾配計算用の複数の誤差レイヤに対してフォワード
@@ -259,24 +263,79 @@ if __name__ == '__main__':
     # seed = int(sys.argv[1])
     # main(seed)
 
-    model = resnet110(use_global_average_pooling=True)
-    # train_loader, test_loader = preprocess.cifar10_loaders()
-    #
-    # learner = Learner(
-    #     model=model,
-    #     train_loader=train_loader,
-    #     test_loader=test_loader,
-    #     # feature_params=model.layer1.parameters(),
-    #     feature_params=[
-    #         model.layer1.parameters(),
-    #         model.layer2.parameters(),
-    #         model.layer3.parameters()
-    #     ],
-    #     fc_mid_params=[],
-    #     fc_end_param=model.linear.parameters(),
-    # )
-    # print(str(learner))
-
+    r"""
     params = list(model.linear.parameters())[0]  # generator 展開
     print(params.shape)  # torch.Size([10, 64]), 64x10型行列
     print(params[0, :].shape)  # torch.Size([64]), 特定ニューロンのパラメータのみ選択できる
+    """
+
+    seed = int(sys.argv[1])
+    sys.stderr.write("seed = " + str(seed) + '\n')
+
+    for case in ('none', 'dropout', 'rotate'):
+        torch.manual_seed(seed)
+        model = resnet110(use_global_average_pooling=True)
+        train_loader, test_loader = preprocess.cifar10_loaders()
+
+        if case == 'rotate' or case == 'dropout':
+            fc_mid_1 = Linear(in_features=4096, out_features=1024, bias=True)
+            fc_mid_2 = Linear(in_features=1024, out_features=1024, bias=True)
+            fc_end = Linear(in_features=1024, out_features=10, bias=True)
+            fc_end_param = fc_end.parameters()
+
+            if case == 'rotate':
+                model.linear = nn.Sequential(
+                    fc_mid_1,
+                    ReLU(inplace=True),
+                    fc_mid_2,
+                    ReLU(inplace=True),
+                    fc_end,
+                )
+                mid_1_param = list(fc_mid_1.parameters())[0]
+                mid_2_param = list(fc_mid_2.parameters())[0]
+                g_size = int(1024 ** 0.5)  # sqrt(32)
+                fc_mid_controllers = [
+                    StaggeredUpdateController([
+                        torch.optim.SGD(list(mid_1_param[g_size * i: g_size * i + g_size, :]), lr=lr, momentum=momentum)
+                        for i in range(g_size)
+                    ]),
+                    StaggeredUpdateController([
+                        torch.optim.SGD(list(mid_2_param[g_size * i: g_size * i + g_size, :]), lr=lr, momentum=momentum)
+                        for i in range(g_size)
+                    ]),
+                ]
+            else:  # dropout
+                model.linear = nn.Sequential(
+                    fc_mid_1,
+                    ReLU(inplace=True),
+                    Dropout(0.5),
+                    fc_mid_2,
+                    ReLU(inplace=True),
+                    Dropout(0.5),
+                    fc_end,
+                )
+                fc_mid_controllers = [
+                    StaggeredUpdateController([torch.optim.SGD(fc_mid_1.parameters(), lr=lr, momentum=momentum)]),
+                    StaggeredUpdateController([torch.optim.SGD(fc_mid_2.parameters(), lr=lr, momentum=momentum)]),
+                ]
+
+        else:  # none
+            model.linear = Linear(in_features=64, out_features=10, bias=True)
+            fc_mid_controllers = []
+            fc_end_param = model.linear.parameters()
+
+        learner = Learner(
+            model=model,
+            train_loader=train_loader,
+            test_loader=test_loader,
+            feature_params=[
+                model.layer1.parameters(),
+                model.layer2.parameters(),
+                model.layer3.parameters()
+            ],
+            fc_mid_controllers=fc_mid_controllers,
+            fc_end_param=fc_end_param,
+            staggered_update=(True if case == 'rotate' else False),
+            detail=case
+        )
+        print(str(learner))
