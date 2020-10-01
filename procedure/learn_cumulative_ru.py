@@ -23,6 +23,7 @@ class StaggeredUpdateController(object):
     1レイヤの更新をコントロールする
     長さ1の配列を渡せば従来法と同じ動作，それより大きい配列で Staggered する
     """
+    # todo optimizer を使わずに自前で更新  c.f. https://qiita.com/perrying/items/857df46bb6cdc3047bd8#optimを使わない場合
     def __init__(self, optimizers: List[torch.optim.Optimizer]):
         self.optimizers = optimizers
         self.idx = 0
@@ -267,6 +268,8 @@ if __name__ == '__main__':
     params = list(model.linear.parameters())[0]  # generator 展開
     print(params.shape)  # torch.Size([10, 64]), 64x10型行列
     print(params[0, :].shape)  # torch.Size([64]), 特定ニューロンのパラメータのみ選択できる
+    
+    これじゃ non_leaf Tensor って言われるから，扱えない
     """
 
     seed = int(sys.argv[1])
@@ -291,16 +294,22 @@ if __name__ == '__main__':
                     ReLU(inplace=True),
                     fc_end,
                 )
-                mid_1_param = list(fc_mid_1.parameters())[0]
-                mid_2_param = list(fc_mid_2.parameters())[0]
+                mid_1_param = list(model.linear[0].parameters())[0]
+                mid_2_param = list(model.linear[2].parameters())[0]
                 g_size = int(1024 ** 0.5)  # sqrt(32)
                 fc_mid_controllers = [
                     StaggeredUpdateController([
-                        torch.optim.SGD(list(mid_1_param[g_size * i: g_size * i + g_size, :]), lr=lr, momentum=momentum)
+                        torch.optim.SGD(
+                            list(mid_1_param[g_size * i: g_size * i + g_size, :]),
+                            lr=lr, momentum=momentum
+                        )
                         for i in range(g_size)
                     ]),
                     StaggeredUpdateController([
-                        torch.optim.SGD(list(mid_2_param[g_size * i: g_size * i + g_size, :]), lr=lr, momentum=momentum)
+                        torch.optim.SGD(
+                            list(mid_2_param[g_size * i: g_size * i + g_size, :]),
+                            lr=lr, momentum=momentum
+                        )
                         for i in range(g_size)
                     ]),
                 ]
@@ -315,8 +324,12 @@ if __name__ == '__main__':
                     fc_end,
                 )
                 fc_mid_controllers = [
-                    StaggeredUpdateController([torch.optim.SGD(fc_mid_1.parameters(), lr=lr, momentum=momentum)]),
-                    StaggeredUpdateController([torch.optim.SGD(fc_mid_2.parameters(), lr=lr, momentum=momentum)]),
+                    StaggeredUpdateController([
+                        torch.optim.SGD(model.linear[0].parameters(), lr=lr, momentum=momentum)
+                    ]),
+                    StaggeredUpdateController([
+                        torch.optim.SGD(model.linear[3].parameters(), lr=lr, momentum=momentum)
+                    ]),
                 ]
 
         else:  # none
@@ -339,3 +352,12 @@ if __name__ == '__main__':
             detail=case
         )
         print(str(learner))
+
+    # model = resnet110(use_global_average_pooling=True)
+    # params = list(model.linear.parameters())[0]  # generator 展開
+    # print(params.shape)  # torch.Size([10, 64]), 64x10型行列
+    # print(params)
+    # part_params = params[0, :]
+    # print(part_params.shape)  # torch.Size([64]), 特定ニューロンのパラメータのみ選択できる
+    # print(part_params)
+    # print(part_params.is_leaf)
