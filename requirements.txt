@@ -1,9 +1,11 @@
-numpy~=1.19.1
-pandas~=1.1.2
-Pillow~=7.2.0
+awesome-progress-bar==1.6.3
+future==0.18.2
+numpy==1.19.1
+pandas==1.1.2
+Pillow==7.2.0
 python-dateutil==2.8.0
 pytz==2019.3
+rotational-update==0.0.17
 six==1.12.0
-torch~=1.6.0
-torchvision~=0.7.0
-rotational-update
+torch==1.6.0
+torchvision==0.7.0

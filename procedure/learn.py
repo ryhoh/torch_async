@@ -9,7 +9,7 @@ import torch.nn as nn
 from torch.nn.modules import Linear, ReLU, Dropout
 import torch.optim as optim
 from awesome_progress_bar import ProgressBar
-from rotational_update import RotationalLinear
+from rotational_update import RotationalLinear, Rotatable
 
 from procedure import preprocess
 from models import resnet110
@@ -172,6 +172,8 @@ device:
             'validation_loss':     self.records['validation_loss'],
             'validation_accuracy': self.records['validation_accuracy'],
         }).to_csv(str(self) + "_valid.csv")
+
+        torch.save(self.learner['model'].state_dict(), str(self) + '.torchmodel')
 
     def _optimize_step(self):
         self.optimizers['optimizer'].step()
