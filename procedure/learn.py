@@ -262,6 +262,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--seed', help='seed', type=int, required=True)
     parser.add_argument('-g', '--gpu', help='gpu_idx', type=int, required=True)
-    parser.parse_args()
+    args = parser.parse_args()
 
-    main(seed=parser.seed, gpu_idx=parser.gpu)
+    main(seed=args.seed, gpu_idx=args.gpu)
