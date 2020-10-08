@@ -1,5 +1,8 @@
 . env/bin/activate
 
+export PYTHONPATH="$PYTHONPATH:~/torch_async/models"
+export PYTHONPATH="$PYTHONPATH:~/torch_async/preprocess"
+
 GPU_IDX=0
 
 for seed in $(seq 0 9)
