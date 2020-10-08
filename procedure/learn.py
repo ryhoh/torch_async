@@ -225,12 +225,12 @@ def main(seed: int, gpu_idx: int, epochs: int):
         if case == 'none':
             mymodel.linear = Linear(in_features=64, out_features=10, bias=True)
 
-        elif case == 'rotate' or case == 'dropout':
+        elif case == 'rotational' or case == 'dropout':
             # fc_mid_1 = Linear(in_features=4096, out_features=1024, bias=True)
             # fc_mid_2 = Linear(in_features=1024, out_features=1024, bias=True)
             # fc_end = Linear(in_features=1024, out_features=10, bias=True)
 
-            if case == 'rotate':
+            if case == 'rotational':
                 mymodel.linear = nn.Sequential(
                     RotationalLinear(Linear(in_features=4096, out_features=1024, bias=True)),
                     ReLU(inplace=True),
