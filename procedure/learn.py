@@ -226,27 +226,27 @@ def main(seed: int, gpu_idx: int, epochs: int):
             mymodel.linear = Linear(in_features=64, out_features=10, bias=True)
 
         elif case == 'rotate' or case == 'dropout':
-            fc_mid_1 = Linear(in_features=4096, out_features=1024, bias=True)
-            fc_mid_2 = Linear(in_features=1024, out_features=1024, bias=True)
-            fc_end = Linear(in_features=1024, out_features=10, bias=True)
+            # fc_mid_1 = Linear(in_features=4096, out_features=1024, bias=True)
+            # fc_mid_2 = Linear(in_features=1024, out_features=1024, bias=True)
+            # fc_end = Linear(in_features=1024, out_features=10, bias=True)
 
             if case == 'rotate':
                 mymodel.linear = nn.Sequential(
-                    RotationalLinear(fc_mid_1),
+                    RotationalLinear(Linear(in_features=4096, out_features=1024, bias=True)),
                     ReLU(inplace=True),
-                    RotationalLinear(fc_mid_2),
+                    RotationalLinear(Linear(in_features=1024, out_features=1024, bias=True)),
                     ReLU(inplace=True),
-                    fc_end,
+                    Linear(in_features=1024, out_features=10, bias=True),
                 )
             elif case == 'dropout':
                 mymodel.linear = nn.Sequential(
-                    fc_mid_1,
+                    Linear(in_features=4096, out_features=1024, bias=True),
                     ReLU(inplace=True),
-                    Dropout(0.5),
-                    fc_mid_2,
+                    Dropout(p=0.5),
+                    Linear(in_features=1024, out_features=1024, bias=True),
                     ReLU(inplace=True),
-                    Dropout(0.5),
-                    fc_end,
+                    Dropout(p=0.5),
+                    Linear(in_features=1024, out_features=10, bias=True),
                 )
             else:
                 assert True
