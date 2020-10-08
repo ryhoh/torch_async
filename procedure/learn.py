@@ -111,7 +111,7 @@ device:
 
             forward_result = self._forward(
                 self.learner['model'], in_tensor, label_tensor,
-                [self.learner['loss_layer_accum'], [self.learner['loss_layer_score']]]
+                [self.learner['loss_layer_accum'], self.learner['loss_layer_score']]
             )
             loss_vector = forward_result['loss'][1]  # for accumulated loss
             reduced_loss = forward_result['loss'][0]  # for score evaluation
