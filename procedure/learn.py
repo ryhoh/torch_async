@@ -24,7 +24,7 @@ class Learner(object):
                  seed_str: str, gpu_idx: int = None, detail: str = None,
                  momentum: float = 0.9, lr: float = 0.001):
 
-        if gpu_idx:
+        if gpu_idx is None:
             self.GPU_ENABLED = True
             self.device = "cuda:" + str(gpu_idx)
         else:
@@ -91,7 +91,7 @@ device:
         self.validate()
 
         for epoch in range(epochs):
-            sys.stderr.write("epoch%04d started" % epoch)
+            sys.stderr.write("\nepoch%04d started\n" % epoch)
             self.run_epoch()
             self.validate()
 
@@ -155,7 +155,7 @@ device:
 
             accuracy = total_correct / data_n
             loss_per_record = total_loss / data_n
-            sys.stderr.write('Loss: {:.3f}, Accuracy: {:.3f}\n'.format(
+            sys.stderr.write('\nValid -- Loss: {:.6f}, Score: {:.6f}\n'.format(
                 loss_per_record,
                 accuracy
             ))
@@ -215,7 +215,7 @@ device:
 
 
 def main(seed: int, gpu_idx: int, epochs: int):
-    sys.stderr.write("seed = " + str(seed) + '\n')
+    sys.stderr.write("\nseed = " + str(seed) + '\n')
     sys.stderr.write("gpu = " + str(gpu_idx) + '\n')
 
     for case in ('none', 'rotational', 'dropout'):
