@@ -220,7 +220,7 @@ def main(seed: int, gpu_idx: int, epochs: int):
 
     for case in ('none', 'rotational', 'dropout'):
         torch.manual_seed(seed)
-        mymodel = resnet110(True if case == 'none' else False)
+        mymodel = resnet110(use_global_average_pooling=(case == 'none'))
 
         if case == 'none':
             mymodel.linear = Linear(in_features=64, out_features=10, bias=True)
