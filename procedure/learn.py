@@ -102,7 +102,7 @@ device:
         data_n = self.dataset['train_length']
         total_loss = 0.0
         total_correct = 0
-        progressbar = ProgressBar(self.dataset['train_length'])
+        # progressbar = ProgressBar(self.dataset['train_length'])
 
         for i, mini_batch in enumerate(self.dataset['train_loader']):
             in_tensor, label_tensor = mini_batch
@@ -123,9 +123,9 @@ device:
             total_correct += self._correct_sum(predicted, label_tensor)
             total_loss += self._loss_sum(loss_vector)
 
-            progressbar.iter()
+            # progressbar.iter()
 
-        progressbar.wait()
+        # progressbar.wait()
         self.records['train_loss'].append(total_loss / data_n)
         self.records['train_accuracy'].append(total_correct / data_n)
 
