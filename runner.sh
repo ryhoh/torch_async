@@ -1,3 +1,5 @@
+. env/bin/activate
+
 GPU_IDX=0
 
 for seed in $(seq 0 9)
