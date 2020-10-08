@@ -218,7 +218,7 @@ def main(seed: int, gpu_idx: int, epochs: int):
     sys.stderr.write("\nseed = " + str(seed) + '\n')
     sys.stderr.write("gpu = " + str(gpu_idx) + '\n')
 
-    for case in ('none', 'rotational', 'dropout'):
+    for case in ('none', 'dropout', 'rotational'):
         torch.manual_seed(seed)
         mymodel = resnet110(use_global_average_pooling=(case == 'none'))
 
