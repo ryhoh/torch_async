@@ -214,7 +214,7 @@ device:
         return loss_vector.sum().item()
 
 
-def main(seed: int, gpu_idx: int):
+def main(seed: int, gpu_idx: int, epochs: int):
     sys.stderr.write("seed = " + str(seed) + '\n')
     sys.stderr.write("gpu = " + str(gpu_idx) + '\n')
 
@@ -255,13 +255,14 @@ def main(seed: int, gpu_idx: int):
 
         train_set, test_set = preprocess.cifar10_loaders()
         Learner(model=mymodel, train_loader=train_set, test_loader=test_set,
-                seed_str=str(seed), gpu_idx=gpu_idx).run(epochs=1)
+                seed_str=str(seed), gpu_idx=gpu_idx).run(epochs=epochs)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--seed', help='seed', type=int, required=True)
     parser.add_argument('-g', '--gpu', help='gpu_idx', type=int, required=True)
+    parser.add_argument('-e', '--epochs', help='number of epochs', type=int, required=True)
     args = parser.parse_args()
 
-    main(seed=args.seed, gpu_idx=args.gpu)
+    main(seed=args.seed, gpu_idx=args.gpu, epochs=args.epochs)
