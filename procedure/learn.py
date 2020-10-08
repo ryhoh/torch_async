@@ -24,7 +24,7 @@ class Learner(object):
                  seed_str: str, gpu_idx: int = None, detail: str = None,
                  momentum: float = 0.9, lr: float = 0.001):
 
-        if gpu_idx is None:
+        if gpu_idx is not None:
             self.GPU_ENABLED = True
             self.device = "cuda:" + str(gpu_idx)
         else:
