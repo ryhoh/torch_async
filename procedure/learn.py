@@ -44,7 +44,7 @@ class Learner(object):
         }
 
         self.optimizers = {
-            'optimizers': optim.SGD(self.learner['model'].parameters(), lr=lr, momentum=momentum),
+            'optimizer': optim.SGD(self.learner['model'].parameters(), lr=lr, momentum=momentum),
         }
         self.dataset = {
             'train_loader': train_loader,
