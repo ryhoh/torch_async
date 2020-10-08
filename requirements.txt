@@ -1,3 +1,4 @@
+wheel==0.35.1
 awesome-progress-bar==1.6.3
 future==0.18.2
 numpy==1.19.1
