@@ -47,8 +47,8 @@ class Learner(object):
             'optimizers': optim.SGD(self.learner['model'].parameters(), lr=lr, momentum=momentum),
         }
         self.dataset = {
-            'train': train_loader,
-            'test':  test_loader,
+            'train_loader': train_loader,
+            'test_loader':  test_loader,
             'train_length': len(train_loader.dataset),
             'test_length':  len(test_loader.dataset),
         }
@@ -102,7 +102,7 @@ device:
         data_n = self.dataset['train_length']
         total_loss = 0.0
         total_correct = 0
-        progressbar = ProgressBar(len(self.dataset['train_loader']))
+        progressbar = ProgressBar(self.dataset['train_length'])
 
         for i, mini_batch in enumerate(self.dataset['train_loader']):
             in_tensor, label_tensor = mini_batch
@@ -136,7 +136,7 @@ device:
             total_loss = 0.0
             data_n = self.dataset['test_length']
 
-            for mini_batch in self.dataset['test']:
+            for mini_batch in self.dataset['test_loader']:
                 in_tensor, label_tensor = mini_batch
                 mini_batch_size = list(in_tensor.size())[0]
 
