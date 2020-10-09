@@ -255,7 +255,7 @@ def main(seed: int, gpu_idx: int, epochs: int):
 
         train_set, test_set = preprocess.cifar10_loaders()
         Learner(model=mymodel, train_loader=train_set, test_loader=test_set,
-                seed_str=str(seed), gpu_idx=gpu_idx).run(epochs=epochs)
+                seed_str=str(seed), gpu_idx=gpu_idx, detail=case).run(epochs=epochs)
 
 
 if __name__ == '__main__':
