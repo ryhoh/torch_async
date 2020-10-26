@@ -175,6 +175,8 @@ device:
         else:
             raise AttributeError('model has no fc!')
 
+        if isinstance(fcs, Linear):  # ex_case: "none"
+            return
         for layer in fcs:
             if isinstance(layer, Rotatable):
                 layer.rotate()
