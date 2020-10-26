@@ -175,7 +175,7 @@ if __name__ == '__main__':
     seed = args.seed
     print("seed =", seed)
 
-    for exp_name in ('none', 'rotational'):
+    for exp_name in ('none', 'rotational', 'dropout'):
     #for exp_name in ('none', 'dropout', 'rotational'):
         torch.manual_seed(seed)
         #myvgg = vgg.vgg16()
