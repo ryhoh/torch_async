@@ -34,13 +34,13 @@ class Learner(object):
         self.records = {
             'train_loss': [],
             'validation_loss': [],
-            'train_accuracy': [],
-            'validation_accuracy': [],
+            'train_score': [],
+            'validation_score': [],
         }
         self.learner = {
             'model': model.to(self.device),
-            'loss_layer_accum': nn.CrossEntropyLoss(),
-            'loss_layer_score':  nn.CrossEntropyLoss(reduction='none'),
+            'loss_layer_backward': nn.CrossEntropyLoss(),
+            'loss_layer_evaluate':  nn.CrossEntropyLoss(reduction='none'),
         }
 
         self.optimizers = {
@@ -107,27 +107,25 @@ device:
         for i, mini_batch in enumerate(self.dataset['train_loader']):
             in_tensor, label_tensor = mini_batch
             in_tensor = in_tensor.to(self.device)
-            label_tensor = label_tensor.to(self.device)
 
-            forward_result = self._forward(
-                self.learner['model'], in_tensor, label_tensor,
-                [self.learner['loss_layer_accum'], self.learner['loss_layer_score']]
-            )
-            loss_vector = forward_result['loss'][1]  # for accumulated loss
-            reduced_loss = forward_result['loss'][0]  # for score evaluation
-            predicted = forward_result['predicted']
+            outputs = self.learner['model'](in_tensor)
+            loss_vector_eval = self.learner['loss_layer_evaluate'](outputs)
+            loss_vector_bkwd = self.learner['loss_layer_backward'](outputs)
+            _, predicted = torch.max(outputs.data, 1)
 
-            reduced_loss.backward()
+            loss_vector_bkwd.backward()
             self._optimize_step()
 
+            total_loss += self._loss_sum(loss_vector_eval)
             total_correct += self._correct_sum(predicted, label_tensor)
-            total_loss += self._loss_sum(loss_vector)
+
+            self._rotate_all()  # rotation する場合はする
 
             # progressbar.iter()
 
         # progressbar.wait()
         self.records['train_loss'].append(total_loss / data_n)
-        self.records['train_accuracy'].append(total_correct / data_n)
+        self.records['train_score'].append(total_correct / data_n)
 
     def validate(self):
         self.learner['model'].eval()
@@ -139,15 +137,11 @@ device:
             for mini_batch in self.dataset['test_loader']:
                 in_tensor, label_tensor = mini_batch
                 mini_batch_size = list(in_tensor.size())[0]
-
                 in_tensor = in_tensor.to(self.device)
-                label_tensor = label_tensor.to(self.device)
 
-                forward_result = self._forward(
-                    self.learner['model'], in_tensor, label_tensor, [self.learner['loss_layer_score']]
-                )
-                loss_vector = forward_result['loss'][0]
-                predicted = forward_result['predicted']
+                outputs = self.learner['model'](in_tensor)
+                loss_vector = self.learner['loss_layer_evaluate'](outputs)
+                _, predicted = torch.max(outputs.data, 1)
                 assert list(loss_vector.size()) == [mini_batch_size]
 
                 total_correct += self._correct_sum(predicted, label_tensor)
@@ -160,19 +154,10 @@ device:
                 accuracy
             ))
             self.records['validation_loss'].append(loss_per_record)
-            self.records['validation_accuracy'].append(accuracy)
+            self.records['validation_score'].append(accuracy)
 
     def write_final_record(self):
-        pd.DataFrame({
-            'train_loss':     self.records['train_loss'],
-            'train_accuracy': self.records['train_accuracy'],
-        }).to_csv(str(self) + "_train.csv")
-
-        pd.DataFrame({
-            'validation_loss':     self.records['validation_loss'],
-            'validation_accuracy': self.records['validation_accuracy'],
-        }).to_csv(str(self) + "_valid.csv")
-
+        pd.DataFrame(self.records).to_csv(str(self) + '.csv')
         torch.save(self.learner['model'].state_dict(), str(self) + '.torchmodel')
 
     def _optimize_step(self):
@@ -192,26 +177,13 @@ device:
             if isinstance(layer, Rotatable):
                 layer.rotate()
 
-    r"""
-    評価用，勾配計算用の複数の誤差レイヤに対してフォワード
-    """
-    @staticmethod
-    def _forward(model, in_tensor, label_tensor, loss_layers: list) -> Dict[str, Any]:
-        outputs = model(in_tensor)
-        _, predicted = torch.max(outputs.data, 1)
-
-        return {
-            'loss': tuple(loss_layer(outputs, label_tensor) for loss_layer in loss_layers),
-            'predicted': predicted.to('cpu'),
-        }
-
     @staticmethod
     def _correct_sum(predicted: torch.Tensor, label_tensor: torch.Tensor) -> float:
         return (predicted.to('cpu') == label_tensor.to('cpu')).sum().item()
 
     @staticmethod
     def _loss_sum(loss_vector):
-        return loss_vector.sum().item()
+        return loss_vector.data.sum().item()
 
 
 def main(seed: int, gpu_idx: int, epochs: int):
@@ -226,10 +198,6 @@ def main(seed: int, gpu_idx: int, epochs: int):
             mymodel.linear = Linear(in_features=64, out_features=10, bias=True)
 
         elif case == 'rotational' or case == 'dropout':
-            # fc_mid_1 = Linear(in_features=4096, out_features=1024, bias=True)
-            # fc_mid_2 = Linear(in_features=1024, out_features=1024, bias=True)
-            # fc_end = Linear(in_features=1024, out_features=10, bias=True)
-
             if case == 'rotational':
                 mymodel.linear = nn.Sequential(
                     RotationalLinear(Linear(in_features=4096, out_features=1024, bias=True)),
