@@ -107,10 +107,11 @@ device:
         for i, mini_batch in enumerate(self.dataset['train_loader']):
             in_tensor, label_tensor = mini_batch
             in_tensor = in_tensor.to(self.device)
+            label_tensor = label_tensor.to(self.device)
 
             outputs = self.learner['model'](in_tensor)
-            loss_vector_eval = self.learner['loss_layer_evaluate'](outputs)
-            loss_vector_bkwd = self.learner['loss_layer_backward'](outputs)
+            loss_vector_eval = self.learner['loss_layer_evaluate'](outputs, label_tensor)
+            loss_vector_bkwd = self.learner['loss_layer_backward'](outputs, label_tensor)
             _, predicted = torch.max(outputs.data, 1)
 
             loss_vector_bkwd.backward()
@@ -138,9 +139,10 @@ device:
                 in_tensor, label_tensor = mini_batch
                 mini_batch_size = list(in_tensor.size())[0]
                 in_tensor = in_tensor.to(self.device)
+                label_tensor = label_tensor.to(self.device)
 
                 outputs = self.learner['model'](in_tensor)
-                loss_vector = self.learner['loss_layer_evaluate'](outputs)
+                loss_vector = self.learner['loss_layer_evaluate'](outputs, label_tensor)
                 _, predicted = torch.max(outputs.data, 1)
                 assert list(loss_vector.size()) == [mini_batch_size]
 
