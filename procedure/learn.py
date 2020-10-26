@@ -32,8 +32,8 @@ class Learner(object):
             self.device = "cpu"
 
         self.records = {
-            'train_loss': [],
-            'validation_loss': [],
+            'train_loss': [None],
+            'validation_loss': [None],
             'train_score': [],
             'validation_score': [],
         }
