@@ -24,10 +24,22 @@ torch.backends.cudnn.benchmark = False
 
 
 def rotate_all(learner: dict):
-    if hasattr(learner['model'].linear, '__iter__'):
-        for layer in learner['model'].linear:
+    attr = set(dir(learner['model']))
+    if 'linear' in attr:  # resnet third-party実装では linear に全結合層がある
+        fcs = learner['model'].linear
+    elif 'classifier' in attr:
+        fcs = learner['model'].classifier
+    else:
+        raise AttributeError('model {!r} has no fully-connected layers!'.format(learner['model']))
+
+    printed = False
+    if hasattr(fcs, '__iter__'):
+        for layer in fcs:
             if isinstance(layer, Rotatable):
                 layer.rotate()
+                if not printed:
+                    print('rotating...')
+                    printed = True
 
 
 def conduct(model: nn.Module, train_loader: DataLoader, test_loader: DataLoader) -> dict:
