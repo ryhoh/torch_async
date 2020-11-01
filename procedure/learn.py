@@ -12,10 +12,11 @@ from torch.utils.data import DataLoader
 from torchvision.models import densenet
 from torch.nn import Dropout
 from rotational_update import RotationalLinear, Rotatable
+from torchvision.models import vgg
 
 from procedure import preprocess
 #from layers import SemisyncLinear, SequentialLinear, Rotatable
-from models import resnet110
+# from models import resnet110
 
 
 torch.backends.cudnn.deterministic = True
@@ -175,54 +176,15 @@ if __name__ == '__main__':
     seed = args.seed
     print("seed =", seed)
 
-    for exp_name in ('none', 'rotational', 'dropout'):
-    #for exp_name in ('none', 'dropout', 'rotational'):
+    for exp_name in ('rotational_dropout', 'dropout'):
         torch.manual_seed(seed)
-        #myvgg = vgg.vgg16()
-        #
-        #assert isinstance(myvgg.classifier[0], Linear)
-        #assert isinstance(myvgg.classifier[3], Linear)
-        #if N == 64:  # 準同期
-        #    myvgg.classifier[0] = RotationalLinear(myvgg.classifier[0])
-        #    myvgg.classifier[3] = RotationalLinear(myvgg.classifier[3])
-        #
-        #myvgg.classifier[-1] = Linear(4096, 10)
-        #
-        ## Dropout 抜き
-        #myvgg.classifier = nn.Sequential(
-        #    myvgg.classifier[0],  # Linear  (Semi)
-        #    myvgg.classifier[1],  # ReLU
-        #    Dropout(0.3),
-        #    myvgg.classifier[3],  # Linear  (Semi)
-        #    myvgg.classifier[4],  # ReLU
-        #    Dropout(0.3),
-        #    myvgg.classifier[6],  # Linear
-        #)
-        #
-
-        model = resnet110(use_global_average_pooling=(exp_name == 'none'))
-        if exp_name == 'rotational':
-            model.linear = nn.Sequential(
-                    RotationalLinear(Linear(in_features=4096, out_features=1024, bias=True)),
-                    ReLU(inplace=True),
-                    RotationalLinear(Linear(in_features=1024, out_features=1024, bias=True)),
-                    ReLU(inplace=True),
-                    Linear(in_features=1024, out_features=10, bias=True),
-                    )
-        elif exp_name == 'dropout':
-            model.linear = nn.Sequential(
-                    Linear(in_features=4096, out_features=1024, bias=True),
-                    ReLU(inplace=True),
-                    Dropout(p=0.5),
-                    Linear(in_features=1024, out_features=1024, bias=True),
-                    ReLU(inplace=True),
-                    Dropout(p=0.5),
-                    Linear(in_features=1024, out_features=10, bias=True),
-                    )
-        else:
-            model.linear = Linear(in_features=64, out_features=10, bias=True)
+        model = vgg.vgg16()
+        if exp_name == 'rotational_dropout':
+            model.classifier[0] = RotationalLinear(model.classifier[0])
+            model.classifier[3] = RotationalLinear(model.classifier[3])
+        model.classifier[-1] = Linear(4096, 10)
 
         print(model)
         model.to(device)
-        record = conduct(model, *(preprocess.cifar10_loaders()))
+        record = conduct(model, *(preprocess.cifar_10_for_vgg_loaders()))
         write_final_record(record, exp_name, seed)
