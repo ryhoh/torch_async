@@ -17,9 +17,9 @@ def cifar_10_for_vgg_loaders() -> Tuple[DataLoader, DataLoader]:
     ])
 
     # data_sets
-    train_set = CIFAR10(root='./data', train=True,
+    train_set = CIFAR10(root='~/dataset', train=True,
                         download=True, transform=transform)
-    test_set = CIFAR10(root='./data', train=False,
+    test_set = CIFAR10(root='~/dataset', train=False,
                        download=True, transform=transform)
 
     # data_loader
@@ -39,9 +39,9 @@ def cifar10_loaders() -> Tuple[DataLoader, DataLoader]:
     ])
 
     # data_sets
-    train_set = CIFAR10(root='./data', train=True,
+    train_set = CIFAR10(root='~/dataset', train=True,
                         download=True, transform=transform)
-    test_set = CIFAR10(root='./data', train=False,
+    test_set = CIFAR10(root='~/dataset', train=False,
                        download=True, transform=transform)
 
     # data_loader
