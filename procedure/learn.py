@@ -194,9 +194,7 @@ if __name__ == '__main__':
         torch.manual_seed(seed)
         model = vgg.vgg16()
 
-        model.classifier[0] = RotationalLinear(model.classifier[0])
         model.classifier[2] = Dropout(p=on_ratio)
-        model.classifier[3] = RotationalLinear(model.classifier[3])
         model.classifier[5] = Dropout(p=on_ratio)
         model.classifier[-1] = Linear(4096, 10)
 
