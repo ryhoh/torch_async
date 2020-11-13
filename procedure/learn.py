@@ -188,8 +188,8 @@ if __name__ == '__main__':
     seed = args.seed
     print("seed =", seed)
 
-    exp = 'dropout'
-    for on_ratio in (0.25, 0.75):
+    on_ratio = 0.75
+    for exp in ('rotational',):
         exp_name = exp + '_' + str(on_ratio).replace('.', '')
         torch.manual_seed(seed)
         model = vgg.vgg16()
@@ -197,6 +197,10 @@ if __name__ == '__main__':
         model.classifier[2] = Dropout(p=on_ratio)
         model.classifier[5] = Dropout(p=on_ratio)
         model.classifier[-1] = Linear(4096, 10)
+
+        if exp == 'rotational':
+            model.classifier[0] = RotationalLinear(model.classifier[0])
+            model.classifier[3] = RotationalLinear(model.classifier[3])
 
         print(model)
         model.to(device)
