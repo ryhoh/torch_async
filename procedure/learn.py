@@ -188,7 +188,7 @@ if __name__ == '__main__':
     seed = args.seed
     print("seed =", seed)
 
-    on_ratio = 0.75
+    on_ratio = 0.25
     for exp in ('rotational',):
         exp_name = exp + '_' + str(on_ratio).replace('.', '')
         torch.manual_seed(seed)
