@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from torchvision.models import densenet
 from torch.nn import Dropout
 from rotational_update import RotationalLinear, Rotatable
-from torchvision.models import vgg
+from torchvision.models import resnet
 
 from procedure import preprocess
 #from layers import SemisyncLinear, SequentialLinear, Rotatable
@@ -182,25 +182,51 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--epochs', help='number of epochs', type=int, required=True)
     args = parser.parse_args()
 
-    GPU_ENABLED = True
-    device = "cuda:" + str(args.gpu)
+    # GPU_ENABLED = True
+    GPU_ENABLED = False
+    # device = "cuda:" + str(args.gpu)
+    device = 'cpu'
     EPOCHS = args.epochs
     seed = args.seed
     print("seed =", seed)
 
-    on_ratio = 0.75
-    for exp in ('rotational',):
+    on_ratio = 0.5
+    for exp in ('none', 'rotational', 'dropout'):
         exp_name = exp + '_' + str(on_ratio).replace('.', '')
         torch.manual_seed(seed)
-        model = vgg.vgg16()
+        model = resnet.resnet152(pretrained=False)
 
-        model.classifier[2] = Dropout(p=on_ratio)
-        model.classifier[5] = Dropout(p=on_ratio)
-        model.classifier[-1] = Linear(4096, 10)
-
-        if exp == 'rotational':
-            model.classifier[0] = RotationalLinear(model.classifier[0])
-            model.classifier[3] = RotationalLinear(model.classifier[3])
+        if exp_name == 'rotational':
+            model.avgpool = nn.AdaptiveAvgPool2d((7, 7))
+            model.fc = nn.Sequential(
+                RotationalLinear(Linear(in_features=100352, out_features=4096, bias=True)),
+                ReLU(inplace=True),
+                RotationalLinear(Linear(in_features=4096, out_features=4096, bias=True)),
+                ReLU(inplace=True),
+                Linear(in_features=4096, out_features=10, bias=True),
+            )
+        elif exp_name == 'dropout':
+            model.avgpool = nn.AdaptiveAvgPool2d((7, 7))
+            model.fc = nn.Sequential(
+                Linear(in_features=100352, out_features=4096, bias=True),
+                ReLU(inplace=True),
+                Dropout(p=0.5),
+                Linear(in_features=4096, out_features=4096, bias=True),
+                ReLU(inplace=True),
+                Dropout(p=0.5),
+                Linear(in_features=4096, out_features=10, bias=True),
+            )
+        else:
+            model.fc = Linear(in_features=2048, out_features=10, bias=True)
+            # def my_avg(avg_pool):
+            #     class f(nn.Module):
+            #         def __call__(self, tensor):
+            #             print(tensor.shape)  # torch.Size([batchsize, 2048, 7, 7])
+            #             return avg_pool(tensor)
+            #     return f()
+            #
+            # avg = model.avgpool
+            # model.avgpool = my_avg(avg)
 
         print(model)
         model.to(device)

@@ -4,9 +4,9 @@ export PYTHONPATH="$PYTHONPATH:~/torch_async/models"
 export PYTHONPATH="$PYTHONPATH:~/torch_async/preprocess"
 
 GPU_IDX=0
-EPOCHS=100
+EPOCHS=1
 
-for seed in $(seq 0 3)
+for seed in $(seq 0 0)
 do
-  python3 procedure/learn.py --seed "$seed" --gpu "$GPU_IDX" 2>&1 --epochs "$EPOCHS" | tee res"${seed}".txt
+  python3 procedure/learn.py --seed "$seed" --gpu "$GPU_IDX" --epochs "$EPOCHS" 2>&1 | tee res"${seed}".txt
 done
