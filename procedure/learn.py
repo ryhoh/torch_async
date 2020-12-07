@@ -198,9 +198,9 @@ if __name__ == '__main__':
 
         if exp == 'rotational':
             exp_name = exp
-            model.avgpool = nn.AdaptiveAvgPool2d((7, 7))
+            model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
             model.fc = nn.Sequential(
-                RotationalLinear(Linear(in_features=100352, out_features=4096, bias=True)),
+                RotationalLinear(Linear(in_features=32768, out_features=4096, bias=True)),
                 ReLU(inplace=True),
                 RotationalLinear(Linear(in_features=4096, out_features=4096, bias=True)),
                 ReLU(inplace=True),
@@ -208,9 +208,9 @@ if __name__ == '__main__':
             )
         elif exp == 'dropout':
             exp_name = exp + '_' + str(on_ratio).replace('.', '')
-            model.avgpool = nn.AdaptiveAvgPool2d((7, 7))
+            model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
             model.fc = nn.Sequential(
-                Linear(in_features=100352, out_features=4096, bias=True),
+                Linear(in_features=32768, out_features=4096, bias=True),
                 ReLU(inplace=True),
                 Dropout(p=on_ratio),
                 Linear(in_features=4096, out_features=4096, bias=True),
