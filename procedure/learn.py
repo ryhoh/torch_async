@@ -193,11 +193,11 @@ if __name__ == '__main__':
 
     on_ratio = 0.5
     for exp in ('none', 'rotational', 'dropout'):
-        exp_name = exp + '_' + str(on_ratio).replace('.', '')
         torch.manual_seed(seed)
         model = resnet.resnet152(pretrained=False)
 
-        if exp_name == 'rotational':
+        if exp == 'rotational':
+            exp_name = exp
             model.avgpool = nn.AdaptiveAvgPool2d((7, 7))
             model.fc = nn.Sequential(
                 RotationalLinear(Linear(in_features=100352, out_features=4096, bias=True)),
@@ -206,7 +206,8 @@ if __name__ == '__main__':
                 ReLU(inplace=True),
                 Linear(in_features=4096, out_features=10, bias=True),
             )
-        elif exp_name == 'dropout':
+        elif exp == 'dropout':
+            exp_name = exp + '_' + str(on_ratio).replace('.', '')
             model.avgpool = nn.AdaptiveAvgPool2d((7, 7))
             model.fc = nn.Sequential(
                 Linear(in_features=100352, out_features=4096, bias=True),
@@ -218,6 +219,7 @@ if __name__ == '__main__':
                 Linear(in_features=4096, out_features=10, bias=True),
             )
         else:
+            exp_name = exp
             model.fc = Linear(in_features=2048, out_features=10, bias=True)
             # def my_avg(avg_pool):
             #     class f(nn.Module):
