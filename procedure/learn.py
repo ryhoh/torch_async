@@ -210,10 +210,10 @@ if __name__ == '__main__':
             model.fc = nn.Sequential(
                 Linear(in_features=100352, out_features=4096, bias=True),
                 ReLU(inplace=True),
-                Dropout(p=0.5),
+                Dropout(p=on_ratio),
                 Linear(in_features=4096, out_features=4096, bias=True),
                 ReLU(inplace=True),
-                Dropout(p=0.5),
+                Dropout(p=on_ratio),
                 Linear(in_features=4096, out_features=10, bias=True),
             )
         else:
