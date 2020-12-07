@@ -24,13 +24,16 @@ torch.backends.cudnn.benchmark = False
 
 
 def rotate_all(learner: dict):
-    attr = set(dir(learner['model']))
+    dir_of_model = dir(learner['model'])
+    attr = set(dir_of_model)
     if 'linear' in attr:  # resnet third-party実装では linear に全結合層がある
         fcs = learner['model'].linear
-    elif 'classifier' in attr:
+    elif 'classifier' in attr:  # pytorch 公式実装の VGG では classifier に全結合層がある
         fcs = learner['model'].classifier
+    elif 'fc' in attr:  # pytorch 公式実装の ResNet では fc に全結合層がある
+        fcs = learner['model'].fc
     else:
-        raise AttributeError('model {!r} has no fully-connected layers!'.format(learner['model']))
+        raise AttributeError('model {!r} has no fully-connected layers!'.format(dir_of_model))
 
     printed = False
     if hasattr(fcs, '__iter__'):
@@ -182,10 +185,8 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--epochs', help='number of epochs', type=int, required=True)
     args = parser.parse_args()
 
-    # GPU_ENABLED = True
-    GPU_ENABLED = False
-    # device = "cuda:" + str(args.gpu)
-    device = 'cpu'
+    GPU_ENABLED = True
+    device = "cuda:" + str(args.gpu)
     EPOCHS = args.epochs
     seed = args.seed
     print("seed =", seed)
