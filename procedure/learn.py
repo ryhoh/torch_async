@@ -229,5 +229,5 @@ if __name__ == '__main__':
 
         print(model)
         model.to(device)
-        record = conduct(model, *(preprocess.cifar_10_for_vgg_loaders()))
+        record = conduct(model, *(preprocess.cifar10_for_loaders()))
         write_final_record(record, exp_name, seed)
