@@ -214,9 +214,9 @@ if __name__ == '__main__':
                     Dropout(p=0.5),
                     Linear(in_features=1024, out_features=10, bias=True),
                     )
-        elif exp_name == 'rotational-dropout':
+        elif exp_name == 'rotational_dropout':
             model.linear = nn.Sequential(
-                    RotationalLinear(Linear(in_features=4096, out_features=1024, bias=True)),
+                RotationalLinear(Linear(in_features=4096, out_features=1024, bias=True)),
                     ReLU(inplace=True),
                     Dropout(p=0.5),
                     RotationalLinear(Linear(in_features=1024, out_features=1024, bias=True)),
