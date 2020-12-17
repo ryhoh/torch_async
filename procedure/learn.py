@@ -196,15 +196,36 @@ if __name__ == '__main__':
         torch.manual_seed(seed)
 
         model = resnet110(use_global_average_pooling=(exp_name == 'none'))
-        model.linear = nn.Sequential(
-            RotationalLinear(Linear(in_features=4096, out_features=1024, bias=True)),
-            ReLU(inplace=True),
-            Dropout(p=on_ratio),
-            RotationalLinear(Linear(in_features=1024, out_features=1024, bias=True)),
-            ReLU(inplace=True),
-            Dropout(p=on_ratio),
-            Linear(in_features=1024, out_features=10, bias=True),
-        )
+        if exp_name == 'rotational':
+            model.linear = nn.Sequential(
+                    RotationalLinear(Linear(in_features=4096, out_features=1024, bias=True)),
+                    ReLU(inplace=True),
+                    RotationalLinear(Linear(in_features=1024, out_features=1024, bias=True)),
+                    ReLU(inplace=True),
+                    Linear(in_features=1024, out_features=10, bias=True),
+                    )
+        elif exp_name == 'dropout':
+            model.linear = nn.Sequential(
+                    Linear(in_features=4096, out_features=1024, bias=True),
+                    ReLU(inplace=True),
+                    Dropout(p=0.5),
+                    Linear(in_features=1024, out_features=1024, bias=True),
+                    ReLU(inplace=True),
+                    Dropout(p=0.5),
+                    Linear(in_features=1024, out_features=10, bias=True),
+                    )
+        elif exp_name == 'rotational-dropout':
+            model.linear = nn.Sequential(
+                    RotationalLinear(Linear(in_features=4096, out_features=1024, bias=True)),
+                    ReLU(inplace=True),
+                    Dropout(p=0.5),
+                    RotationalLinear(Linear(in_features=1024, out_features=1024, bias=True)),
+                    ReLU(inplace=True),
+                    Dropout(p=0.5),
+                    Linear(in_features=1024, out_features=10, bias=True),
+                    )
+        else:
+            model.linear = Linear(in_features=64, out_features=10, bias=True)
 
         print(model)
         model.to(device)
