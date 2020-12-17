@@ -192,44 +192,19 @@ if __name__ == '__main__':
     print("seed =", seed)
 
     on_ratio = 0.5
-    for exp in ('none', 'rotational', 'dropout'):
+    for exp_name in ('rotational_dropout',):
         torch.manual_seed(seed)
-        model = resnet.resnet152(pretrained=False)
 
-        if exp == 'rotational':
-            exp_name = exp
-            model.avgpool = nn.AdaptiveAvgPool2d((4, 4))  # (7, 7) にしてもよいが，VRAM(11GB) に載らないので，縮小
-            model.fc = nn.Sequential(
-                RotationalLinear(Linear(in_features=32768, out_features=4096, bias=True)),
-                ReLU(inplace=True),
-                RotationalLinear(Linear(in_features=4096, out_features=4096, bias=True)),
-                ReLU(inplace=True),
-                Linear(in_features=4096, out_features=10, bias=True),
-            )
-        elif exp == 'dropout':
-            exp_name = exp + '_' + str(on_ratio).replace('.', '')
-            model.avgpool = nn.AdaptiveAvgPool2d((4, 4))  # (7, 7) にしてもよいが，VRAM(11GB) に載らないので，縮小
-            model.fc = nn.Sequential(
-                Linear(in_features=32768, out_features=4096, bias=True),
-                ReLU(inplace=True),
-                Dropout(p=on_ratio),
-                Linear(in_features=4096, out_features=4096, bias=True),
-                ReLU(inplace=True),
-                Dropout(p=on_ratio),
-                Linear(in_features=4096, out_features=10, bias=True),
-            )
-        else:
-            exp_name = exp
-            model.fc = Linear(in_features=2048, out_features=10, bias=True)
-            # def my_avg(avg_pool):
-            #     class f(nn.Module):
-            #         def __call__(self, tensor):
-            #             print(tensor.shape)  # torch.Size([batchsize, 2048, 7, 7])
-            #             return avg_pool(tensor)
-            #     return f()
-            #
-            # avg = model.avgpool
-            # model.avgpool = my_avg(avg)
+        model = resnet110(use_global_average_pooling=(exp_name == 'none'))
+        model.linear = nn.Sequential(
+            RotationalLinear(Linear(in_features=4096, out_features=1024, bias=True)),
+            ReLU(inplace=True),
+            Dropout(p=on_ratio),
+            RotationalLinear(Linear(in_features=1024, out_features=1024, bias=True)),
+            ReLU(inplace=True),
+            Dropout(p=on_ratio),
+            Linear(in_features=1024, out_features=10, bias=True),
+        )
 
         print(model)
         model.to(device)
