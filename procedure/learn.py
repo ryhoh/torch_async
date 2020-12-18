@@ -200,7 +200,7 @@ if __name__ == '__main__':
     ###########################################################
 
     on_ratio = 0.5
-    for exp_name in ('rotational_dropout',):
+    for exp in ('rotational_dropout',):
         torch.manual_seed(seed)
 
         model = resnet.resnet152(pretrained=False)
