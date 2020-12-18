@@ -12,11 +12,11 @@ from torch.utils.data import DataLoader
 from torchvision.models import densenet
 from torch.nn import Dropout
 from rotational_update import RotationalLinear, Rotatable
-# from torchvision.models import resnet
+from torchvision.models import resnet
 
 from procedure import preprocess
 #from layers import SemisyncLinear, SequentialLinear, Rotatable
-from models import resnet110
+# from models import resnet110
 
 
 torch.backends.cudnn.deterministic = True
@@ -193,7 +193,7 @@ if __name__ == '__main__':
 
     ###########################################################
     # Check below
-    # 1. Model
+    # 1. Model (make and import)
     # 2. exp_name
     # 3. exp_conditions (if-elif branch)
     # 4. Dataset select (preprocess.hogehoge)
