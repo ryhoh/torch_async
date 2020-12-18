@@ -191,43 +191,56 @@ if __name__ == '__main__':
     seed = args.seed
     print("seed =", seed)
 
+    ###########################################################
+    # Check below
+    # 1. Model
+    # 2. exp_name
+    # 3. exp_conditions (if-elif branch)
+    # 4. Dataset select (preprocess.hogehoge)
+    ###########################################################
+
     on_ratio = 0.5
     for exp_name in ('rotational_dropout',):
         torch.manual_seed(seed)
 
-        model = resnet110(use_global_average_pooling=(exp_name == 'none'))
-        if exp_name == 'rotational':
-            model.linear = nn.Sequential(
-                    RotationalLinear(Linear(in_features=4096, out_features=1024, bias=True)),
-                    ReLU(inplace=True),
-                    RotationalLinear(Linear(in_features=1024, out_features=1024, bias=True)),
-                    ReLU(inplace=True),
-                    Linear(in_features=1024, out_features=10, bias=True),
-                    )
-        elif exp_name == 'dropout':
-            model.linear = nn.Sequential(
-                    Linear(in_features=4096, out_features=1024, bias=True),
-                    ReLU(inplace=True),
-                    Dropout(p=0.5),
-                    Linear(in_features=1024, out_features=1024, bias=True),
-                    ReLU(inplace=True),
-                    Dropout(p=0.5),
-                    Linear(in_features=1024, out_features=10, bias=True),
-                    )
-        elif exp_name == 'rotational_dropout':
-            model.linear = nn.Sequential(
-                RotationalLinear(Linear(in_features=4096, out_features=1024, bias=True)),
-                    ReLU(inplace=True),
-                    Dropout(p=0.5),
-                    RotationalLinear(Linear(in_features=1024, out_features=1024, bias=True)),
-                    ReLU(inplace=True),
-                    Dropout(p=0.5),
-                    Linear(in_features=1024, out_features=10, bias=True),
-                    )
-        else:
-            model.linear = Linear(in_features=64, out_features=10, bias=True)
+        model = resnet.resnet152(pretrained=False)
+
+        if exp == 'rotational':
+            exp_name = exp
+            model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
+            model.fc = nn.Sequential(
+                RotationalLinear(Linear(in_features=32768, out_features=4096, bias=True)),
+                ReLU(inplace=True),
+                RotationalLinear(Linear(in_features=4096, out_features=4096, bias=True)),
+                ReLU(inplace=True),
+                Linear(in_features=4096, out_features=10, bias=True),
+            )
+        elif exp == 'dropout':
+            exp_name = exp + '_' + str(on_ratio).replace('.', '')
+            model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
+            model.fc = nn.Sequential(
+                Linear(in_features=32768, out_features=4096, bias=True),
+                ReLU(inplace=True),
+                Dropout(p=on_ratio),
+                Linear(in_features=4096, out_features=4096, bias=True),
+                ReLU(inplace=True),
+                Dropout(p=on_ratio),
+                Linear(in_features=4096, out_features=10, bias=True),
+            )
+        elif exp == 'rotational_dropout':
+            exp_name = exp + '_' + str(on_ratio).replace('.', '')
+            model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
+            model.fc = nn.Sequential(
+                RotationalLinear(Linear(in_features=32768, out_features=4096, bias=True)),
+                ReLU(inplace=True),
+                Dropout(p=on_ratio),
+                RotationalLinear(Linear(in_features=4096, out_features=4096, bias=True)),
+                ReLU(inplace=True),
+                Dropout(p=on_ratio),
+                Linear(in_features=4096, out_features=10, bias=True),
+            )
 
         print(model)
         model.to(device)
-        record = conduct(model, *(preprocess.cifar10_loaders()))
+        record = conduct(model, *(preprocess.cifar_10_for_vgg_loaders()))
         write_final_record(record, exp_name, seed)
