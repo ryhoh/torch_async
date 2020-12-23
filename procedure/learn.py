@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from torchvision.models import densenet
 from torch.nn import Dropout
 from rotational_update import RotationalLinear, Rotatable
-from torchvision.models import resnet
+from torchvision.models import vgg
 
 from procedure import preprocess
 #from layers import SemisyncLinear, SequentialLinear, Rotatable
@@ -193,54 +193,63 @@ if __name__ == '__main__':
 
     ###########################################################
     # Check below
-    # 1. Model (make and import)
+    # 1. Model (declare and import)
     # 2. exp_name
     # 3. exp_conditions (if-elif branch)
     # 4. Dataset select (preprocess.hogehoge)
     ###########################################################
 
     on_ratio = 0.5
-    for exp in ('rotational_dropout',):
+    for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
         torch.manual_seed(seed)
 
-        model = resnet.resnet152(pretrained=False)
+        model = vgg.VGG19(pretrained=False)
 
         if exp == 'rotational':
             exp_name = exp
-            model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
-            model.fc = nn.Sequential(
-                RotationalLinear(Linear(in_features=32768, out_features=4096, bias=True)),
+            # model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
+            model.classifier = nn.Sequential(
+                RotationalLinear(model.classifier[0]),
                 ReLU(inplace=True),
-                RotationalLinear(Linear(in_features=4096, out_features=4096, bias=True)),
+                RotationalLinear(model.classifier[2]),
                 ReLU(inplace=True),
-                Linear(in_features=4096, out_features=10, bias=True),
+                Linear(in_features=4096, out_features=100, bias=True),
             )
         elif exp == 'dropout':
             exp_name = exp + '_' + str(on_ratio).replace('.', '')
-            model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
-            model.fc = nn.Sequential(
-                Linear(in_features=32768, out_features=4096, bias=True),
+            # model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
+            model.classifier = nn.Sequential(
+                model.classifier[0],
                 ReLU(inplace=True),
                 Dropout(p=on_ratio),
-                Linear(in_features=4096, out_features=4096, bias=True),
+                model.classifier[3],
                 ReLU(inplace=True),
                 Dropout(p=on_ratio),
-                Linear(in_features=4096, out_features=10, bias=True),
+                Linear(in_features=4096, out_features=100, bias=True),
             )
         elif exp == 'rotational_dropout':
             exp_name = exp + '_' + str(on_ratio).replace('.', '')
-            model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
-            model.fc = nn.Sequential(
-                RotationalLinear(Linear(in_features=32768, out_features=4096, bias=True)),
+            # model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
+            model.classifier = nn.Sequential(
+                RotationalLinear(model.classifier[0]),
                 ReLU(inplace=True),
                 Dropout(p=on_ratio),
-                RotationalLinear(Linear(in_features=4096, out_features=4096, bias=True)),
+                RotationalLinear(model.classifier[3]),
                 ReLU(inplace=True),
                 Dropout(p=on_ratio),
-                Linear(in_features=4096, out_features=10, bias=True),
+                Linear(in_features=4096, out_features=100, bias=True),
+            )
+        else:
+            exp_name = exp
+            model.classifier = nn.Sequential(
+                model.classifier[0],
+                ReLU(inplace=True),
+                model.classifier[2],
+                ReLU(inplace=True),
+                Linear(in_features=4096, out_features=100, bias=True),
             )
 
         print(model)
         model.to(device)
-        record = conduct(model, *(preprocess.cifar_10_for_vgg_loaders()))
+        record = conduct(model, *(preprocess.cifar_100_for_224s()))
         write_final_record(record, exp_name, seed)
