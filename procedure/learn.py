@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from torchvision.models import densenet
 from torch.nn import Dropout
 from rotational_update import RotationalLinear, Rotatable
-from torchvision.models import vgg
+from torchvision.models import vgg16_bn
 
 from procedure import preprocess
 #from layers import SemisyncLinear, SequentialLinear, Rotatable
@@ -203,7 +203,7 @@ if __name__ == '__main__':
     for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
         torch.manual_seed(seed)
 
-        model = vgg.VGG19(pretrained=False)
+        model = vgg16_bn(pretrained=False)
 
         if exp == 'rotational':
             exp_name = exp
@@ -251,5 +251,5 @@ if __name__ == '__main__':
 
         print(model)
         model.to(device)
-        record = conduct(model, *(preprocess.cifar_100_for_224s()))
+        record = conduct(model, *(preprocess.cifar_10_for_224s()))
         write_final_record(record, exp_name, seed)
