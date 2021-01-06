@@ -34,6 +34,7 @@ def cifar_100_for_224s() -> Tuple[DataLoader, DataLoader]:
 def cifar_10_for_vgg_loaders() -> Tuple[DataLoader, DataLoader]:
     return cifar_10_for_224s()
 
+
 def cifar_10_for_224s() -> Tuple[DataLoader, DataLoader]:
     # テンソル化, RGB毎に平均と標準偏差を用いて正規化
     transform = transforms.Compose([

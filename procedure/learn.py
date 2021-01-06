@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from torchvision.models import densenet
 from torch.nn import Dropout
 from rotational_update import RotationalLinear, Rotatable
-from torchvision.models import vgg16_bn
+from torchvision.models import vgg16
 
 from procedure import preprocess
 #from layers import SemisyncLinear, SequentialLinear, Rotatable
@@ -45,7 +45,7 @@ def rotate_all(learner: dict):
                     printed = True
 
 
-def conduct(model: nn.Module, train_loader: DataLoader, test_loader: DataLoader) -> dict:
+def conduct(model: nn.Module, train_loader: DataLoader, test_loader: DataLoader, lr: float = 0.001) -> dict:
     records = {
         'train_loss': [],
         'validation_loss': [],
@@ -56,7 +56,7 @@ def conduct(model: nn.Module, train_loader: DataLoader, test_loader: DataLoader)
         'model': model,
         'loss_layer_reduce': nn.CrossEntropyLoss(),
         'loss_layer': nn.CrossEntropyLoss(reduction='none'),
-        'optimizer': optim.SGD(model.parameters(), lr=0.001, momentum=0.9),
+        'optimizer': optim.SGD(model.parameters(), lr=lr, momentum=0.9),
     }
     dataset = {
         'train': train_loader,
@@ -203,53 +203,53 @@ if __name__ == '__main__':
     for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
         torch.manual_seed(seed)
 
-        model = vgg16_bn(pretrained=False)
+        my_model = vgg16(pretrained=False)
 
         if exp == 'rotational':
             exp_name = exp
             # model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
-            model.classifier = nn.Sequential(
-                RotationalLinear(model.classifier[0]),
+            my_model.classifier = nn.Sequential(
+                RotationalLinear(my_model.classifier[0]),
                 ReLU(inplace=True),
-                RotationalLinear(model.classifier[2]),
+                RotationalLinear(my_model.classifier[2]),
                 ReLU(inplace=True),
-                Linear(in_features=4096, out_features=100, bias=True),
+                Linear(in_features=4096, out_features=10, bias=True),
             )
         elif exp == 'dropout':
             exp_name = exp + '_' + str(on_ratio).replace('.', '')
             # model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
-            model.classifier = nn.Sequential(
-                model.classifier[0],
+            my_model.classifier = nn.Sequential(
+                my_model.classifier[0],
                 ReLU(inplace=True),
                 Dropout(p=on_ratio),
-                model.classifier[3],
+                my_model.classifier[3],
                 ReLU(inplace=True),
                 Dropout(p=on_ratio),
-                Linear(in_features=4096, out_features=100, bias=True),
+                Linear(in_features=4096, out_features=10, bias=True),
             )
         elif exp == 'rotational_dropout':
             exp_name = exp + '_' + str(on_ratio).replace('.', '')
             # model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
-            model.classifier = nn.Sequential(
-                RotationalLinear(model.classifier[0]),
+            my_model.classifier = nn.Sequential(
+                RotationalLinear(my_model.classifier[0]),
                 ReLU(inplace=True),
                 Dropout(p=on_ratio),
-                RotationalLinear(model.classifier[3]),
+                RotationalLinear(my_model.classifier[3]),
                 ReLU(inplace=True),
                 Dropout(p=on_ratio),
-                Linear(in_features=4096, out_features=100, bias=True),
+                Linear(in_features=4096, out_features=10, bias=True),
             )
         else:
             exp_name = exp
-            model.classifier = nn.Sequential(
-                model.classifier[0],
+            my_model.classifier = nn.Sequential(
+                my_model.classifier[0],
                 ReLU(inplace=True),
-                model.classifier[2],
+                my_model.classifier[2],
                 ReLU(inplace=True),
-                Linear(in_features=4096, out_features=100, bias=True),
+                Linear(in_features=4096, out_features=10, bias=True),
             )
 
-        print(model)
-        model.to(device)
-        record = conduct(model, *(preprocess.cifar_10_for_224s()))
+        print(my_model)
+        my_model.to(device)
+        record = conduct(my_model, *(preprocess.cifar_10_for_224s()), lr=0.01)
         write_final_record(record, exp_name, seed)
