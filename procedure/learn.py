@@ -200,7 +200,8 @@ if __name__ == '__main__':
     ###########################################################
 
     on_ratio = 0.5
-    for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
+    # for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
+    for exp in ('rotational',):
         torch.manual_seed(seed)
 
         my_model = vgg16(pretrained=False)
@@ -211,7 +212,7 @@ if __name__ == '__main__':
             my_model.classifier = nn.Sequential(
                 RotationalLinear(my_model.classifier[0]),
                 ReLU(inplace=True),
-                RotationalLinear(my_model.classifier[2]),
+                RotationalLinear(my_model.classifier[3]),
                 ReLU(inplace=True),
                 Linear(in_features=4096, out_features=10, bias=True),
             )
