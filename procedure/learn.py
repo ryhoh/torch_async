@@ -200,8 +200,7 @@ if __name__ == '__main__':
     ###########################################################
 
     on_ratio = 0.5
-    # for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
-    for exp in ('rotational',):
+    for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
         torch.manual_seed(seed)
 
         my_model = vgg16(pretrained=False)
@@ -252,5 +251,5 @@ if __name__ == '__main__':
 
         print(my_model)
         my_model.to(device)
-        record = conduct(my_model, *(preprocess.cifar_10_for_224s()), lr=0.01)
+        record = conduct(my_model, *(preprocess.cifar_10_for_224s()), lr=0.0005)
         write_final_record(record, exp_name, seed)
