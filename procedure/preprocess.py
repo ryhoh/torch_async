@@ -1,5 +1,7 @@
+import os
 from typing import Tuple
 
+import numpy as np
 from PIL import Image
 from pycocotools.mask import frPyObjects, decode
 from torch.utils.data import DataLoader
@@ -123,12 +125,39 @@ def fashion_mnist_train_test_loader() -> Tuple[DataLoader, DataLoader]:
     return train_loader, test_loader
 
 
+# http://akasuku.blog.jp/archives/73817244.html
 class CocoSegmentation(CocoDetection):
     def __getitem__(self, index):
-        img, target = super().__getitem__(index)
+
+        # データ入力
+        coco = self.coco
+        img_id = self.ids[index]
+        ann_ids = coco.getAnnIds(imgIds=img_id)
+        target = coco.loadAnns(ann_ids)
+        path = coco.loadImgs(img_id)[0]['file_name']
+        img = Image.open(os.path.join(self.root, path)).convert('RGB')
+
+        # セグメンテーション情報のデコード
         for category in target:
             seg_rle = category['segmentation']
-            category['segmentation'] = decode(frPyObjects(seg_rle, img.shape[1], img.shape[2]))
+            tmp = decode(frPyObjects(seg_rle, img.size[1], img.size[0]))
+            if tmp.ndim == 3:
+                tmp = np.sum(tmp, axis=2, dtype=np.uint8)
+            category['segmentation'] = tmp
+
+        # data_transform
+        if self.transform is not None:
+            img = self.transform(img)
+
+        # target_transform
+        for category in target:
+            pilImg = Image.fromarray(category['segmentation'])
+            tmp = pilImg.resize((img.shape[2], img.shape[1]), resample=Image.NEAREST)
+            target_transform = transforms.Compose([
+                transforms.ToTensor()
+            ])
+            category['segmentation'] = target_transform(tmp)
+
         return img, target
 
 
