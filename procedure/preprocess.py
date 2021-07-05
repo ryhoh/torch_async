@@ -134,18 +134,18 @@ class CocoSegmentation(CocoDetection):
 
 def CocoDetection_loaders() -> Tuple[DataLoader, DataLoader]:
     # テンソル化, RGB毎に平均と標準偏差を用いて正規化
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
+    # transform = transforms.Compose([
+    #     transforms.ToTensor(),
+    #     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    # ])
 
     # data_sets
     train_set = CocoDetection(root='~/dataset/coco/train2017',
-                              annFile='~/dataset/coco/annotations/instances_train2017.json',
-                              transform=transform)
+                              annFile='~/dataset/coco/annotations/instances_train2017.json',)
+                              # transform=transform)
     val_set = CocoDetection(root='~/dataset/coco/val2017',
-                            annFile='~/dataset/coco/annotations/instances_val2017.json',
-                            transform=transform)
+                            annFile='~/dataset/coco/annotations/instances_val2017.json',)
+                            # transform=transform)
 
     # data_loader
     train_loader = DataLoader(train_set, batch_size=32,
