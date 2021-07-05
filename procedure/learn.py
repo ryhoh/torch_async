@@ -207,16 +207,10 @@ if __name__ == '__main__':
         my_model = Darknet53(80)
     #     my_model = vgg16(pretrained=False)
     #
-    #     if exp == 'rotational':
-    #         exp_name = exp
-    #         # model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
-    #         my_model.classifier = nn.Sequential(
-    #             RotationalLinear(my_model.classifier[0]),
-    #             ReLU(inplace=True),
-    #             RotationalLinear(my_model.classifier[3]),
-    #             ReLU(inplace=True),
-    #             Linear(in_features=4096, out_features=10, bias=True),
-    #         )
+        if exp == 'rotational':
+            exp_name = exp
+            my_model.linear = RotationalLinear(my_model.linear)
+
     #     elif exp == 'dropout':
     #         exp_name = exp + '_' + str(on_ratio).replace('.', '')
     #         # model.avgpool = nn.AdaptiveAvgPool2d((4, 4))

@@ -135,6 +135,7 @@ class CocoSegmentation(CocoDetection):
 def CocoDetection_loaders() -> Tuple[DataLoader, DataLoader]:
     # テンソル化, RGB毎に平均と標準偏差を用いて正規化
     transform = transforms.Compose([
+        transforms.Resize((256, 256)),  # 画像ごとにサイズが異なる
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
