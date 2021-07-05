@@ -201,8 +201,10 @@ if __name__ == '__main__':
 
     # on_ratio = 0.5
     # for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
-    #     torch.manual_seed(seed)
-    #
+    for exp in ('normal',):
+        torch.manual_seed(seed)
+
+        my_model = Darknet53(80)
     #     my_model = vgg16(pretrained=False)
     #
     #     if exp == 'rotational':
@@ -249,11 +251,12 @@ if __name__ == '__main__':
     #             Linear(in_features=4096, out_features=10, bias=True),
     #         )
     #
-    #     print(my_model)
-    #     my_model.to(device)
+        print(my_model)
+        my_model.to(device)
+        record = conduct(my_model, *(preprocess.CocoDetection_loaders()), lr=0.001)
     #     record = conduct(my_model, *(preprocess.cifar_10_for_224s()), lr=0.0005)
     #     write_final_record(record, exp_name, seed)
 
     # my_model = Darknet53(80)
     # print(my_model)
-    print(preprocess.CocoDetection_loaders())
+    # print(preprocess.CocoDetection_loaders())
