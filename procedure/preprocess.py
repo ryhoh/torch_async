@@ -1,9 +1,9 @@
 from typing import Tuple
 
 from PIL import Image
-
+from pycocotools.mask import frPyObjects, decode
 from torch.utils.data import DataLoader
-from torchvision.datasets import CIFAR10, CIFAR100, MNIST, FashionMNIST
+from torchvision.datasets import CIFAR10, CIFAR100, MNIST, FashionMNIST, CocoDetection
 from torchvision import transforms
 
 
@@ -121,3 +121,36 @@ def fashion_mnist_train_test_loader() -> Tuple[DataLoader, DataLoader]:
                              shuffle=False, num_workers=4)
 
     return train_loader, test_loader
+
+
+class CocoSegmentation(CocoDetection):
+    def __getitem__(self, index):
+        img, target = super().__getitem__(index)
+        for category in target:
+            seg_rle = category['segmentation']
+            category['segmentation'] = decode(frPyObjects(seg_rle, img.shape[1], img.shape[2]))
+        return img, target
+
+
+def CocoDetection_loaders() -> Tuple[DataLoader, DataLoader]:
+    # テンソル化, RGB毎に平均と標準偏差を用いて正規化
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
+
+    # data_sets
+    train_set = CocoDetection(root='~/dataset/coco/train2017',
+                              annFile='~/dataset/coco/annotations/instances_train2017.json',
+                              transform=transform)
+    val_set = CocoDetection(root='~/dataset/coco/val2017',
+                            annFile='~/dataset/coco/annotations/instances_val2017.json',
+                            transform=transform)
+
+    # data_loader
+    train_loader = DataLoader(train_set, batch_size=32,
+                              shuffle=True, num_workers=4)
+    val_loader = DataLoader(val_set, batch_size=32,
+                            shuffle=False, num_workers=4)
+
+    return train_loader, val_loader
