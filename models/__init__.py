@@ -1,5 +1,6 @@
 from models.pytorch_resnet_cifar10.resnet import resnet20, resnet32, resnet44, resnet56, resnet110, resnet1202
 from models.densenet_pytorch import densenet
+from models.darknet import Darknet53
 
 
 def densenet12_40():

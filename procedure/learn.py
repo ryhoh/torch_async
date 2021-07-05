@@ -9,14 +9,14 @@ import torch.nn as nn
 from torch.nn.modules import Linear, ReLU
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from torchvision.models import densenet
+# from torchvision.models import densenet
 from torch.nn import Dropout
 from rotational_update import RotationalLinear, Rotatable
 from torchvision.models import vgg16
 
 from procedure import preprocess
 #from layers import SemisyncLinear, SequentialLinear, Rotatable
-# from models import resnet110
+from models import Darknet53
 
 
 torch.backends.cudnn.deterministic = True
@@ -199,57 +199,59 @@ if __name__ == '__main__':
     # 4. Dataset select (preprocess.hogehoge)
     ###########################################################
 
-    on_ratio = 0.5
-    for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
-        torch.manual_seed(seed)
-
-        my_model = vgg16(pretrained=False)
-
-        if exp == 'rotational':
-            exp_name = exp
-            # model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
-            my_model.classifier = nn.Sequential(
-                RotationalLinear(my_model.classifier[0]),
-                ReLU(inplace=True),
-                RotationalLinear(my_model.classifier[3]),
-                ReLU(inplace=True),
-                Linear(in_features=4096, out_features=10, bias=True),
-            )
-        elif exp == 'dropout':
-            exp_name = exp + '_' + str(on_ratio).replace('.', '')
-            # model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
-            my_model.classifier = nn.Sequential(
-                my_model.classifier[0],
-                ReLU(inplace=True),
-                Dropout(p=on_ratio),
-                my_model.classifier[3],
-                ReLU(inplace=True),
-                Dropout(p=on_ratio),
-                Linear(in_features=4096, out_features=10, bias=True),
-            )
-        elif exp == 'rotational_dropout':
-            exp_name = exp + '_' + str(on_ratio).replace('.', '')
-            # model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
-            my_model.classifier = nn.Sequential(
-                RotationalLinear(my_model.classifier[0]),
-                ReLU(inplace=True),
-                Dropout(p=on_ratio),
-                RotationalLinear(my_model.classifier[3]),
-                ReLU(inplace=True),
-                Dropout(p=on_ratio),
-                Linear(in_features=4096, out_features=10, bias=True),
-            )
-        else:
-            exp_name = exp
-            my_model.classifier = nn.Sequential(
-                my_model.classifier[0],
-                ReLU(inplace=True),
-                my_model.classifier[2],
-                ReLU(inplace=True),
-                Linear(in_features=4096, out_features=10, bias=True),
-            )
-
-        print(my_model)
-        my_model.to(device)
-        record = conduct(my_model, *(preprocess.cifar_10_for_224s()), lr=0.0005)
-        write_final_record(record, exp_name, seed)
+    # on_ratio = 0.5
+    # for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
+    #     torch.manual_seed(seed)
+    #
+    #     my_model = vgg16(pretrained=False)
+    #
+    #     if exp == 'rotational':
+    #         exp_name = exp
+    #         # model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
+    #         my_model.classifier = nn.Sequential(
+    #             RotationalLinear(my_model.classifier[0]),
+    #             ReLU(inplace=True),
+    #             RotationalLinear(my_model.classifier[3]),
+    #             ReLU(inplace=True),
+    #             Linear(in_features=4096, out_features=10, bias=True),
+    #         )
+    #     elif exp == 'dropout':
+    #         exp_name = exp + '_' + str(on_ratio).replace('.', '')
+    #         # model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
+    #         my_model.classifier = nn.Sequential(
+    #             my_model.classifier[0],
+    #             ReLU(inplace=True),
+    #             Dropout(p=on_ratio),
+    #             my_model.classifier[3],
+    #             ReLU(inplace=True),
+    #             Dropout(p=on_ratio),
+    #             Linear(in_features=4096, out_features=10, bias=True),
+    #         )
+    #     elif exp == 'rotational_dropout':
+    #         exp_name = exp + '_' + str(on_ratio).replace('.', '')
+    #         # model.avgpool = nn.AdaptiveAvgPool2d((4, 4))
+    #         my_model.classifier = nn.Sequential(
+    #             RotationalLinear(my_model.classifier[0]),
+    #             ReLU(inplace=True),
+    #             Dropout(p=on_ratio),
+    #             RotationalLinear(my_model.classifier[3]),
+    #             ReLU(inplace=True),
+    #             Dropout(p=on_ratio),
+    #             Linear(in_features=4096, out_features=10, bias=True),
+    #         )
+    #     else:
+    #         exp_name = exp
+    #         my_model.classifier = nn.Sequential(
+    #             my_model.classifier[0],
+    #             ReLU(inplace=True),
+    #             my_model.classifier[2],
+    #             ReLU(inplace=True),
+    #             Linear(in_features=4096, out_features=10, bias=True),
+    #         )
+    #
+    #     print(my_model)
+    #     my_model.to(device)
+    #     record = conduct(my_model, *(preprocess.cifar_10_for_224s()), lr=0.0005)
+    #     write_final_record(record, exp_name, seed)
+    my_model = Darknet53(80)
+    print(my_model)
