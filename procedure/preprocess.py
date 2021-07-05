@@ -141,11 +141,11 @@ def CocoDetection_loaders() -> Tuple[DataLoader, DataLoader]:
     # ])
 
     # data_sets
-    train_set = CocoDetection(root=path.join(environ['HOME'], 'coco/train2017'),
-                              annFile=path.join(environ['HOME'], 'coco/annotations/instances_train2017.json',))
+    train_set = CocoDetection(root=path.join(environ['HOME'], 'coco', 'train2017'),
+                              annFile=path.join(environ['HOME'], 'coco', 'annotations', 'instances_train2017.json'))
                               # transform=transform)
-    val_set = CocoDetection(root=path.join(environ['HOME'], 'coco/val2017'),
-                            annFile=path.join(environ['HOME'], 'coco/annotations/instances_val2017.json',))
+    val_set = CocoDetection(root=path.join(environ['HOME'], 'coco', 'val2017'),
+                            annFile=path.join(environ['HOME'], 'coco', 'annotations', 'instances_val2017.json'))
                             # transform=transform)
 
     # data_loader
