@@ -1,5 +1,6 @@
 from typing import Tuple
 
+from os import path
 from PIL import Image
 from pycocotools.mask import frPyObjects, decode
 from torch.utils.data import DataLoader
@@ -140,11 +141,11 @@ def CocoDetection_loaders() -> Tuple[DataLoader, DataLoader]:
     # ])
 
     # data_sets
-    train_set = CocoDetection(root='~/dataset/coco/train2017',
-                              annFile='../dataset/coco/annotations/instances_train2017.json',)
+    train_set = CocoDetection(root=path.join('~/dataset/', 'coco/train2017'),
+                              annFile=path.join('~/dataset/', 'coco/annotations/instances_train2017.json',))
                               # transform=transform)
-    val_set = CocoDetection(root='~/dataset/coco/val2017',
-                            annFile='../dataset/coco/annotations/instances_val2017.json',)
+    val_set = CocoDetection(root=path.join('~/dataset/', 'coco/val2017'),
+                            annFile=path.join('~/dataset/', 'coco/annotations/instances_val2017.json',))
                             # transform=transform)
 
     # data_loader
