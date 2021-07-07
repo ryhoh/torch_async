@@ -94,14 +94,13 @@ class COCODataset(Dataset):
         self.max_labels = 50
         self.img_size = img_size
         self.min_size = min_size
-        if augmentation:
-            self.lrflip = augmentation['LRFLIP']
-            self.jitter = augmentation['JITTER']
-            self.random_placing = augmentation['RANDOM_PLACING']
-            self.hue = augmentation['HUE']
-            self.saturation = augmentation['SATURATION']
-            self.exposure = augmentation['EXPOSURE']
-            self.random_distort = augmentation['RANDOM_DISTORT']
+        self.lrflip = augmentation['LRFLIP'] if augmentation else None
+        self.jitter = augmentation['JITTER'] if augmentation else None
+        self.random_placing = augmentation['RANDOM_PLACING'] if augmentation else None
+        self.hue = augmentation['HUE'] if augmentation else None
+        self.saturation = augmentation['SATURATION'] if augmentation else None
+        self.exposure = augmentation['EXPOSURE'] if augmentation else None
+        self.random_distort = augmentation['RANDOM_DISTORT'] if augmentation else None
 
 
     def __len__(self):
