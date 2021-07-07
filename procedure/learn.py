@@ -135,7 +135,6 @@ def validate(learner: dict, dataset: dict, records: dict) -> dict:
         data_n = len(dataset['test'].dataset)
 
         for mini_batch in dataset['test']:
-            # label: [class, x, y, w, h]
             input_data, label_data = mini_batch
             mini_batch_size = list(input_data.size())[0]
 
@@ -202,7 +201,7 @@ if __name__ == '__main__':
 
     # on_ratio = 0.5
     # for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
-    for exp in ('normal',):
+    for exp in ('rotational', 'normal',):
         torch.manual_seed(seed)
 
         # https://github.com/lukemelas/PyTorch-Pretrained-ViT/blob/master/pytorch_pretrained_vit/model.py
@@ -216,14 +215,14 @@ if __name__ == '__main__':
         )
     #     my_model = vgg16(pretrained=False)
     #
-        # if exp == 'rotational':
-        #     exp_name = exp
-        #     my_model.linear = RotationalLinear(my_model.linear)
+        if exp == 'rotational':
+            my_model.fc = RotationalLinear(my_model.fc)
+
         print(my_model)
         my_model.to(device)
         record = conduct(my_model, *(preprocess.cifar_100_resized(size=384, mini_batch_size=8)), lr=0.001)
     #     record = conduct(my_model, *(preprocess.cifar_10_for_224s()), lr=0.0005)
-    #     write_final_record(record, exp_name, seed)
+        write_final_record(record, exp, seed)
 
     # my_model = Darknet53(80)
     # print(my_model)
