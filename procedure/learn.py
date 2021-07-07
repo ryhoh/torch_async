@@ -205,7 +205,14 @@ if __name__ == '__main__':
     for exp in ('normal',):
         torch.manual_seed(seed)
 
-        my_model = ViT('B_16', pretrained=True)
+        # https://github.com/lukemelas/PyTorch-Pretrained-ViT/blob/master/pytorch_pretrained_vit/model.py
+        my_model = ViT(
+            name='B_16',
+            pretrained=True,
+            dropout_rate=0,
+            image_size=384,
+            num_classes=100
+        )
     #     my_model = vgg16(pretrained=False)
     #
         # if exp == 'rotational':
