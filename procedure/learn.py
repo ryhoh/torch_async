@@ -85,7 +85,7 @@ def run_epoch(learner: dict, train_loader: DataLoader, data_n: int,
     total_correct = 0
 
     for i, mini_batch in enumerate(train_loader):
-        input_data, label_data = mini_batch
+        input_data, label_data, _, _ = mini_batch
         # mini_batch_size = list(input_data.size())[0]
 
         if GPU_ENABLED:
@@ -135,7 +135,8 @@ def validate(learner: dict, dataset: dict, records: dict) -> dict:
         data_n = len(dataset['test'].dataset)
 
         for mini_batch in dataset['test']:
-            input_data, label_data = mini_batch
+            # label: [class, x, y, w, h]
+            input_data, label_data, _, _ = mini_batch
             mini_batch_size = list(input_data.size())[0]
 
             if GPU_ENABLED:
