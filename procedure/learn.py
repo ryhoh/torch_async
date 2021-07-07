@@ -247,7 +247,7 @@ if __name__ == '__main__':
     #
         print(my_model)
         my_model.to(device)
-        record = conduct(my_model, *(preprocess.CocoDetection_loaders()), lr=0.001)
+        record = conduct(my_model, *(preprocess.CocoDetection_2014_loaders()), lr=0.001)
     #     record = conduct(my_model, *(preprocess.cifar_10_for_224s()), lr=0.0005)
     #     write_final_record(record, exp_name, seed)
 
