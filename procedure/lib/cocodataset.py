@@ -60,7 +60,7 @@ from torch.utils.data import Dataset
 import cv2
 from pycocotools.coco import COCO
 
-from coco_util import *
+from .coco_util import *
 
 
 class COCODataset(Dataset):
