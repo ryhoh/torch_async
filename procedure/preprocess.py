@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10, CIFAR100, MNIST, FashionMNIST, CocoDetection
 from torchvision import transforms
 
-from lib.cocodataset import COCODataset
+from procedure.lib.cocodataset import COCODataset
 
 
 def cifar_100_for_224s() -> Tuple[DataLoader, DataLoader]:
