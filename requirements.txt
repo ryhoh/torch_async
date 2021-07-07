@@ -11,6 +11,7 @@ python-dateutil==2.8.0
 pytorch_pretrained_vit==0.0.7
 pytz==2019.3
 rotational-update==0.0.17
+scipy==1.7.0
 six==1.12.0
 torch==1.6.0
 torchvision==0.7.0

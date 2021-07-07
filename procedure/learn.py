@@ -220,7 +220,7 @@ if __name__ == '__main__':
         #     my_model.linear = RotationalLinear(my_model.linear)
         print(my_model)
         my_model.to(device)
-        record = conduct(my_model, *(preprocess.cifar_100_resized(size=384)), lr=0.001)
+        record = conduct(my_model, *(preprocess.cifar_100_resized(size=384, mini_batch_size=16)), lr=0.001)
     #     record = conduct(my_model, *(preprocess.cifar_10_for_224s()), lr=0.0005)
     #     write_final_record(record, exp_name, seed)
 
