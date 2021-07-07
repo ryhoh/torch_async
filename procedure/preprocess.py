@@ -171,10 +171,10 @@ def CocoDetection_2017_loaders() -> Tuple[DataLoader, DataLoader]:
 
     # data_sets
     train_set = CocoSegmentation(root='~/dataset/coco/train2017',
-                                 annFile='../dataset/coco/annotations/instances_train2017.json',  # なぜか ../ でないと落ちる
+                                 annFile='../dataset/coco/annotations_2017/instances_train2017.json',  # なぜか ../ でないと落ちる
                                  transform=transform)
     val_set = CocoSegmentation(root='~/dataset/coco/val2017',
-                               annFile='../dataset/coco/annotations/instances_val2017.json',
+                               annFile='../dataset/coco/annotations_2017/instances_val2017.json',
                                transform=transform)
 
     # data_loader
