@@ -8,6 +8,8 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10, CIFAR100, MNIST, FashionMNIST, CocoDetection
 from torchvision import transforms
 
+from lib.cocodataset import COCODataset
+
 
 def cifar_100_for_224s() -> Tuple[DataLoader, DataLoader]:
     # テンソル化, RGB毎に平均と標準偏差を用いて正規化
@@ -125,40 +127,40 @@ def fashion_mnist_train_test_loader() -> Tuple[DataLoader, DataLoader]:
     return train_loader, test_loader
 
 
-# http://akasuku.blog.jp/archives/73817244.html
-class CocoSegmentation(CocoDetection):
-    def __getitem__(self, index):
-
-        # データ入力
-        coco = self.coco
-        img_id = self.ids[index]
-        ann_ids = coco.getAnnIds(imgIds=img_id)
-        target = coco.loadAnns(ann_ids)
-        path = coco.loadImgs(img_id)[0]['file_name']
-        img = Image.open(os.path.join(self.root, path)).convert('RGB')
-
-        # セグメンテーション情報のデコード
-        for category in target:
-            seg_rle = category['segmentation']
-            tmp = decode(frPyObjects(seg_rle, img.size[1], img.size[0]))
-            if tmp.ndim == 3:
-                tmp = np.sum(tmp, axis=2, dtype=np.uint8)
-            category['segmentation'] = tmp
-
-        # data_transform
-        if self.transform is not None:
-            img = self.transform(img)
-
-        # target_transform
-        for category in target:
-            pilImg = Image.fromarray(category['segmentation'])
-            tmp = pilImg.resize((img.shape[2], img.shape[1]), resample=Image.NEAREST)
-            target_transform = transforms.Compose([
-                transforms.ToTensor()
-            ])
-            category['segmentation'] = target_transform(tmp)
-
-        return img, target
+# # http://akasuku.blog.jp/archives/73817244.html
+# class CocoSegmentation(CocoDetection):
+#     def __getitem__(self, index):
+#
+#         # データ入力
+#         coco = self.coco
+#         img_id = self.ids[index]
+#         ann_ids = coco.getAnnIds(imgIds=img_id)
+#         target = coco.loadAnns(ann_ids)
+#         path = coco.loadImgs(img_id)[0]['file_name']
+#         img = Image.open(os.path.join(self.root, path)).convert('RGB')
+#
+#         # セグメンテーション情報のデコード
+#         for category in target:
+#             seg_rle = category['segmentation']
+#             tmp = decode(frPyObjects(seg_rle, img.size[1], img.size[0]))
+#             if tmp.ndim == 3:
+#                 tmp = np.sum(tmp, axis=2, dtype=np.uint8)
+#             category['segmentation'] = tmp
+#
+#         # data_transform
+#         if self.transform is not None:
+#             img = self.transform(img)
+#
+#         # target_transform
+#         for category in target:
+#             pilImg = Image.fromarray(category['segmentation'])
+#             tmp = pilImg.resize((img.shape[2], img.shape[1]), resample=Image.NEAREST)
+#             target_transform = transforms.Compose([
+#                 transforms.ToTensor()
+#             ])
+#             category['segmentation'] = target_transform(tmp)
+#
+#         return img, target
 
 
 def CocoDetection_2017_loaders() -> Tuple[DataLoader, DataLoader]:
@@ -170,12 +172,18 @@ def CocoDetection_2017_loaders() -> Tuple[DataLoader, DataLoader]:
     ])
 
     # data_sets
-    train_set = CocoSegmentation(root='~/dataset/coco/train2017',
-                                 annFile='../dataset/coco/annotations_2017/instances_train2017.json',  # なぜか ../ でないと落ちる
-                                 transform=transform)
-    val_set = CocoSegmentation(root='~/dataset/coco/val2017',
-                               annFile='../dataset/coco/annotations_2017/instances_val2017.json',
-                               transform=transform)
+    train_set = COCODataset(
+        model_type='YOLOv3',
+        data_dir='~/dataset/coco/train2017',
+        json_file='~/dataset/coco/annotations_2017/instances_train2017.json',
+        name='train2017',
+        img_size=416)
+    val_set = COCODataset(
+        model_type='YOLOv3',
+        data_dir='~/dataset/coco/val2017',
+        json_file='~/dataset/coco/annotations_2017/instances_val2017.json',
+        name='val2017',
+        img_size=416)
 
     # data_loader
     train_loader = DataLoader(train_set, batch_size=32,
