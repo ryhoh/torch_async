@@ -170,12 +170,12 @@ def CocoDetection_2017_loaders() -> Tuple[DataLoader, DataLoader]:
     ])
 
     # data_sets
-    train_set = CocoDetection(root='~/dataset/coco/train2017',
-                              annFile='../dataset/coco/annotations/instances_train2017.json',  # なぜか ../ でないと落ちる
-                              transform=transform)
-    val_set = CocoDetection(root='~/dataset/coco/val2017',
-                            annFile='../dataset/coco/annotations/instances_val2017.json',
-                            transform=transform)
+    train_set = CocoSegmentation(root='~/dataset/coco/train2017',
+                                 annFile='../dataset/coco/annotations/instances_train2017.json',  # なぜか ../ でないと落ちる
+                                 transform=transform)
+    val_set = CocoSegmentation(root='~/dataset/coco/val2017',
+                               annFile='../dataset/coco/annotations/instances_val2017.json',
+                               transform=transform)
 
     # data_loader
     train_loader = DataLoader(train_set, batch_size=32,
@@ -186,26 +186,26 @@ def CocoDetection_2017_loaders() -> Tuple[DataLoader, DataLoader]:
     return train_loader, val_loader
 
 
-def CocoDetection_2014_loaders() -> Tuple[DataLoader, DataLoader]:
-    # テンソル化, RGB毎に平均と標準偏差を用いて正規化
-    transform = transforms.Compose([
-        transforms.Resize((256, 256)),  # 画像ごとにサイズが異なる
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
-
-    # data_sets
-    train_set = CocoDetection(root='~/dataset/coco/train2014',
-                              annFile='../dataset/coco/annotations_2014/instances_train2014.json',  # なぜか ../ でないと落ちる
-                              transform=transform)
-    val_set = CocoDetection(root='~/dataset/coco/val2014',
-                            annFile='../dataset/coco/annotations_2014/instances_val2014.json',
-                            transform=transform)
-
-    # data_loader
-    train_loader = DataLoader(train_set, batch_size=32,
-                              shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_set, batch_size=32,
-                            shuffle=False, num_workers=4)
-
-    return train_loader, val_loader
+# def CocoDetection_2014_loaders() -> Tuple[DataLoader, DataLoader]:
+#     # テンソル化, RGB毎に平均と標準偏差を用いて正規化
+#     transform = transforms.Compose([
+#         transforms.Resize((256, 256)),  # 画像ごとにサイズが異なる
+#         transforms.ToTensor(),
+#         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+#     ])
+#
+#     # data_sets
+#     train_set = CocoDetection(root='~/dataset/coco/train2014',
+#                               annFile='../dataset/coco/annotations_2014/instances_train2014.json',  # なぜか ../ でないと落ちる
+#                               transform=transform)
+#     val_set = CocoDetection(root='~/dataset/coco/val2014',
+#                             annFile='../dataset/coco/annotations_2014/instances_val2014.json',
+#                             transform=transform)
+#
+#     # data_loader
+#     train_loader = DataLoader(train_set, batch_size=32,
+#                               shuffle=True, num_workers=4)
+#     val_loader = DataLoader(val_set, batch_size=32,
+#                             shuffle=False, num_workers=4)
+#
+#     return train_loader, val_loader
