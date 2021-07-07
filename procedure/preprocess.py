@@ -174,14 +174,14 @@ def CocoDetection_2017_loaders() -> Tuple[DataLoader, DataLoader]:
     # data_sets
     train_set = COCODataset(
         model_type='YOLOv3',
-        data_dir='~/dataset/coco/train2017',
-        json_file='../dataset/coco/annotations_2017/instances_train2017.json',  # なぜか ../ でないと落ちる
+        data_dir='~/dataset/coco/',
+        json_file='annotations_2017/instances_train2017.json',
         name='train2017',
         img_size=416)
     val_set = COCODataset(
         model_type='YOLOv3',
-        data_dir='~/dataset/coco/val2017',
-        json_file='../dataset/coco/annotations_2017/instances_val2017.json',
+        data_dir='~/dataset/coco/',
+        json_file='annotations_2017/instances_val2017.json',
         name='val2017',
         img_size=416)
 
