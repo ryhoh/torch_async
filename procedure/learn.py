@@ -209,6 +209,7 @@ if __name__ == '__main__':
         my_model = ViT(
             name='B_16',
             pretrained=True,
+            attention_dropout_rate=1.0
             dropout_rate=1.0,
             image_size=384,
             num_classes=100
