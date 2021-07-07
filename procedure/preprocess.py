@@ -199,7 +199,7 @@ def CocoDetection_2014_loaders() -> Tuple[DataLoader, DataLoader]:
                               annFile='../dataset/coco/annotations_2014/instances_train2014.json',  # なぜか ../ でないと落ちる
                               transform=transform)
     val_set = CocoDetection(root='~/dataset/coco/val2014',
-                            annFile='../dataset/coco/annotations_2017/instances_val2014.json',
+                            annFile='../dataset/coco/annotations_2014/instances_val2014.json',
                             transform=transform)
 
     # data_loader
