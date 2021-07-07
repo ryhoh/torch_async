@@ -8,6 +8,7 @@ pandas==1.1.2
 Pillow==7.2.0
 pycocotools==2.0.2
 python-dateutil==2.8.0
+pytorch_pretrained_vit==0.0.7
 pytz==2019.3
 rotational-update==0.0.17
 six==1.12.0

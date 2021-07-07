@@ -11,20 +11,20 @@ from torchvision import transforms
 from procedure.lib.cocodataset import COCODataset
 
 
-def cifar_100_for_224s() -> Tuple[DataLoader, DataLoader]:
+def cifar_100_resized(size: int = 224) -> Tuple[DataLoader, DataLoader]:
     # テンソル化, RGB毎に平均と標準偏差を用いて正規化
     transform = transforms.Compose([
         # VGGは元々ImageNetを想定しているので、cifarをリサイズする
-        transforms.Resize((224, 224), interpolation=Image.BICUBIC),
+        transforms.Resize((size, size), interpolation=Image.BICUBIC),
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 
     # data_sets
     train_set = CIFAR100(root='~/dataset', train=True,
-                        download=True, transform=transform)
+                         download=True, transform=transform)
     test_set = CIFAR100(root='~/dataset', train=False,
-                       download=True, transform=transform)
+                        download=True, transform=transform)
 
     # data_loader
     train_loader = DataLoader(train_set, batch_size=32,
@@ -35,15 +35,15 @@ def cifar_100_for_224s() -> Tuple[DataLoader, DataLoader]:
     return train_loader, test_loader
 
 
-def cifar_10_for_vgg_loaders() -> Tuple[DataLoader, DataLoader]:
-    return cifar_10_for_224s()
+# def cifar_10_for_vgg_loaders() -> Tuple[DataLoader, DataLoader]:
+#     return cifar_10_for_224s()
 
 
-def cifar_10_for_224s() -> Tuple[DataLoader, DataLoader]:
+def cifar_10_resized(size: int = 224) -> Tuple[DataLoader, DataLoader]:
     # テンソル化, RGB毎に平均と標準偏差を用いて正規化
     transform = transforms.Compose([
         # VGGは元々ImageNetを想定しているので、cifarをリサイズする
-        transforms.Resize((224, 224), interpolation=Image.BICUBIC),
+        transforms.Resize((size, size), interpolation=Image.BICUBIC),
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])

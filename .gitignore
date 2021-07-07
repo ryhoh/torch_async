@@ -3,3 +3,5 @@ torch_async/*
 env/*
 *.pyc
 procedure/data/*
+
+.DS_Store
