@@ -305,7 +305,7 @@ def preprocess(img, imgsize, jitter, random_placing=False):
     img = img[:, :, ::-1]
     assert img is not None
 
-    if jitter > 0:
+    if jitter and jitter > 0:
         # add jitter
         dw = jitter * w
         dh = jitter * h
