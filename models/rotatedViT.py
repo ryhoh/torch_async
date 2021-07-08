@@ -4,7 +4,7 @@ from rotational_update import RotationalLinear
 
 def apply_rotational_into_ViT_Projections(model: ViT) -> ViT:
     blocks = model.transformer.blocks
-    for i in len(blocks):
+    for i in range(len(blocks)):
         attn = blocks[i].attn
         attn.proj_q = RotationalLinear(attn.proj_q)
         attn.proj_k = RotationalLinear(attn.proj_k)
@@ -15,7 +15,7 @@ def apply_rotational_into_ViT_Projections(model: ViT) -> ViT:
 
 def apply_rotational_into_ViT_PositionWiseFeedForward(model: ViT) -> ViT:
     blocks = model.transformer.blocks
-    for i in len(blocks):
+    for i in range(len(blocks)):
         pwff = blocks[i].pwff
         pwff.fc1 = RotationalLinear(pwff.fc1)
         pwff.fc2 = RotationalLinear(pwff.fc2)
