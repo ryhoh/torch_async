@@ -16,7 +16,7 @@ from rotational_update import RotationalLinear, Rotatable
 from torchvision.models import vgg16
 
 from procedure import preprocess
-from models import Darknet53
+from models import rotatedViT
 
 
 torch.backends.cudnn.deterministic = True
@@ -201,22 +201,24 @@ if __name__ == '__main__':
 
     # on_ratio = 0.5
     # for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
-    for exp in ('rotational', 'normal',):
+    for exp in ('rotational_proj', 'rotational_pwff', 'normal',):
         torch.manual_seed(seed)
 
         # https://github.com/lukemelas/PyTorch-Pretrained-ViT/blob/master/pytorch_pretrained_vit/model.py
         my_model = ViT(
             name='B_16',
             pretrained=True,
-            attention_dropout_rate=1.0,
-            dropout_rate=1.0,
+            # attention_dropout_rate=1.0,
+            # dropout_rate=1.0,
             image_size=384,
             num_classes=100
         )
     #     my_model = vgg16(pretrained=False)
     #
-        if exp == 'rotational':
-            my_model.fc = RotationalLinear(my_model.fc)
+        if exp == 'rotational_proj':
+            my_model = rotatedViT.apply_rotational_into_ViT_Projections(my_model)
+        if exp == 'rotational_pwff':
+            my_model = rotatedViT.apply_rotational_into_ViT_Projections(my_model)
 
         print(my_model)
         my_model.to(device)
