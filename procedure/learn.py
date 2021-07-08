@@ -201,7 +201,11 @@ if __name__ == '__main__':
 
     # on_ratio = 0.5
     # for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
-    for exp in ('rotational_proj', 'rotational_pwff', 'normal',):
+    for exp in (
+            # 'rotational_proj',
+            'rotational_pwff',
+            'normal',
+    ):
         torch.manual_seed(seed)
 
         # https://github.com/lukemelas/PyTorch-Pretrained-ViT/blob/master/pytorch_pretrained_vit/model.py
