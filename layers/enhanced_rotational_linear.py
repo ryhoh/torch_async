@@ -23,7 +23,12 @@ class EnhancedRotationalLinearFunction(Function):
     def backward(ctx, *args: Tensor) -> tuple:
         grad = args[0]
         x, w, b, learn_l, learn_r = ctx.saved_tensors
-        w = w.t()
+        if w.ndim == 2:  # Primitive Backward
+            w = w.t()
+        elif w.ndim == 3:  # 3D Backward (not sure...)
+            print(w.shape)
+            w = w.permute(0, 2, 1)
+
         learn_l, learn_r = int(learn_l), int(learn_r)
 
         # バイアスへの勾配は、0ベクトルを作って必要な要素だけ値を入れる
