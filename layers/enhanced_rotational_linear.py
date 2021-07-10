@@ -1,3 +1,5 @@
+import sys
+
 from rotational_update import RotationalLinear
 import torch
 from torch import Tensor
@@ -30,13 +32,17 @@ class EnhancedRotationalLinearFunction(Function):
         w = w.t()
         learn_l, learn_r = int(learn_l), int(learn_r)
 
+        sys.stderr.write("a\n")
+
         # バイアスへの勾配は、0ベクトルを作って必要な要素だけ値を入れる
         # gradients for bias, make 0 vector and insert value into needed element
         if grad.is_cuda:
             d_b = torch.zeros(size=(grad.shape[1],), dtype=torch.float32, device='cuda')
         else:
             d_b = torch.zeros(size=(grad.shape[1],), dtype=torch.float32)
+        sys.stderr.write("b\n")
         d_b[learn_l:learn_r] = torch.sum(grad[:, learn_l:learn_r], dim=0)
+        sys.stderr.write("c\n")
 
         # 重みへの勾配は、0行列を作って必要な行だけ値を入れる
         # gradients for weights, make 0 matrix and insert value into needed column
