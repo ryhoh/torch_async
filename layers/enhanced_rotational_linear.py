@@ -39,7 +39,7 @@ class EnhancedRotationalLinearFunction(Function):
         else:
             d_b = torch.zeros(size=(grad.shape[1],), dtype=torch.float32)
 
-        d_b[learn_l:learn_r] = torch.sum(grad[:, learn_l:learn_r], dim=(0, 2))
+        d_b[learn_l:learn_r] = torch.sum(grad[:, :, learn_l:learn_r], dim=(0, 1))
         sys.stderr.write("c\n")
 
         # 重みへの勾配は、0行列を作って必要な行だけ値を入れる
@@ -54,7 +54,8 @@ class EnhancedRotationalLinearFunction(Function):
         if x.ndim == 2:  # Primitive Backward
             d_w[:, learn_l:learn_r] = torch.matmul(x.t(), grad[:, learn_l:learn_r])
         elif x.ndim == 3:  # 3D Backward (not sure...)
-            d_w[:, learn_l:learn_r] = torch.bmm(x.permute(0, 2, 1), grad[:, learn_l:learn_r])
+            print(x.permute(0, 2, 1).shape, grad[:, :, learn_l:learn_r].shape)
+            d_w[:, learn_l:learn_r] = torch.bmm(x.permute(0, 2, 1), grad[:, :, learn_l:learn_r])
         else:
             raise BackwardError("d_w.ndim == %d" % d_w.ndim)
         sys.stderr.write("d\n")
