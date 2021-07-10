@@ -55,7 +55,7 @@ class EnhancedRotationalLinearFunction(Function):
             d_w[:, learn_l:learn_r] = torch.matmul(x.t(), grad[:, learn_l:learn_r])
         elif x.ndim == 3:  # 3D Backward (not sure...)
             print(x.permute(0, 2, 1).shape, grad[:, :, learn_l:learn_r].shape)
-            d_w[:, learn_l:learn_r] = torch.bmm(x.permute(0, 2, 1), grad[:, :, learn_l:learn_r])
+            d_w[:, learn_l:learn_r] = torch.sum(torch.bmm(x.permute(0, 2, 1), grad[:, :, learn_l:learn_r]), dim=0)
         else:
             raise BackwardError("d_w.ndim == %d" % d_w.ndim)
         sys.stderr.write("d\n")
