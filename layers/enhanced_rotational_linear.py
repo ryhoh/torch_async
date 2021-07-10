@@ -45,10 +45,11 @@ class EnhancedRotationalLinearFunction(Function):
 
         # 重みへの勾配は、0行列を作って必要な行だけ値を入れる
         # gradients for weights, make 0 matrix and insert value into needed column
-        if grad.is_cuda:
-            d_w = torch.zeros(size=(x.shape[1], grad.shape[1]), dtype=torch.float32, device='cuda')
-        else:
-            d_w = torch.zeros(size=(x.shape[1], grad.shape[1]), dtype=torch.float32)
+        d_w = torch.zeros(
+            size=(x.shape[x.ndim - 1], grad.shape[grad.ndim - 1]),
+            dtype=torch.float32,
+            device='cuda' if grad.is_cuda else 'cpu'
+        )
 
         print(d_w.shape)
         if x.ndim == 2:  # Primitive Backward
@@ -57,8 +58,10 @@ class EnhancedRotationalLinearFunction(Function):
             d_w[:, learn_l:learn_r] = torch.bmm(x.permute(0, 2, 1), grad[:, learn_l:learn_r])
         else:
             raise BackwardError("d_w.ndim == %d" % d_w.ndim)
+        sys.stderr.write("d\n")
 
         d_x = torch.matmul(grad, torch.t(w))
+        sys.stderr.write("e\n")
 
         if d_w.ndim == 2:  # Primitive Backward
             return d_x, d_w.t(), d_b, None, None
