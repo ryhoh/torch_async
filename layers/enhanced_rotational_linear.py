@@ -27,20 +27,24 @@ class EnhancedRotationalLinearFunction(Function):
         x, w, b, learn_l, learn_r = ctx.saved_tensors
 
         # torch.Size([N, 577, 768]) torch.Size([768, 768]) torch.Size([768]) torch.Size([N, 577, 768])
-        print(x.shape, w.shape, b.shape, grad.shape)
+        # print(x.shape, w.shape, b.shape, grad.shape)
 
         w = w.t()
         learn_l, learn_r = int(learn_l), int(learn_r)
 
         # バイアスへの勾配は、0ベクトルを作って必要な要素だけ値を入れる
         # gradients for bias, make 0 vector and insert value into needed element
-        if grad.is_cuda:
-            d_b = torch.zeros(size=(grad.shape[1],), dtype=torch.float32, device='cuda')
-        else:
-            d_b = torch.zeros(size=(grad.shape[1],), dtype=torch.float32)
+        d_b = torch.zeros(
+            size=(grad.shape[grad.ndim - 1],),
+            dtype=torch.float32,
+            device='cuda' if grad.is_cuda else 'cpu'
+        )
 
-        d_b[learn_l:learn_r] = torch.sum(grad[:, :, learn_l:learn_r], dim=(0, 1))
-        sys.stderr.write("c\n")
+        if grad.ndim == 2:  # Primitive Backward
+            d_b[learn_l:learn_r] = torch.sum(grad[:, learn_l:learn_r], dim=0)
+        elif grad.ndim == 3:  # 3D Backward (not sure...)
+            d_b[learn_l:learn_r] = torch.sum(grad[:, :, learn_l:learn_r], dim=(0, 1))
+        # sys.stderr.write("c\n")
 
         # 重みへの勾配は、0行列を作って必要な行だけ値を入れる
         # gradients for weights, make 0 matrix and insert value into needed column
@@ -50,11 +54,11 @@ class EnhancedRotationalLinearFunction(Function):
             device='cuda' if grad.is_cuda else 'cpu'
         )
 
-        print(d_w.shape)
+        # print(d_w.shape)
         if x.ndim == 2:  # Primitive Backward
             d_w[:, learn_l:learn_r] = torch.matmul(x.t(), grad[:, learn_l:learn_r])
         elif x.ndim == 3:  # 3D Backward (not sure...)
-            print(x.permute(0, 2, 1).shape, grad[:, :, learn_l:learn_r].shape)
+            # print(x.permute(0, 2, 1).shape, grad[:, :, learn_l:learn_r].shape)
             d_w[:, learn_l:learn_r] = torch.sum(torch.bmm(x.permute(0, 2, 1), grad[:, :, learn_l:learn_r]), dim=0)
         else:
             raise BackwardError("d_w.ndim == %d" % d_w.ndim)
@@ -63,6 +67,7 @@ class EnhancedRotationalLinearFunction(Function):
         d_x = torch.matmul(grad, torch.t(w))
         sys.stderr.write("e\n")
 
+        # fixme
         if d_w.ndim == 2:  # Primitive Backward
             return d_x, d_w.t(), d_b, None, None
         elif w.ndim == 3:  # 3D Backward (not sure...)
