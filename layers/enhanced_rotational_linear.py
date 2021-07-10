@@ -24,14 +24,10 @@ class EnhancedRotationalLinearFunction(Function):
         grad = args[0]
         x, w, b, learn_l, learn_r = ctx.saved_tensors
 
+        # torch.Size([N, 577, 768]) torch.Size([768, 768]) torch.Size([768]) torch.Size([N, 577, 768])
         print(x.shape, w.shape, b.shape, grad.shape)
-        if w.ndim == 2:  # Primitive Backward
-            w = w.t()
-        elif w.ndim == 3:  # 3D Backward (not sure...)
-            w = w.permute(0, 2, 1)
-        else:
-            raise BackwardError("w.ndim == %d" % w.ndim)
 
+        w = w.t()
         learn_l, learn_r = int(learn_l), int(learn_r)
 
         # バイアスへの勾配は、0ベクトルを作って必要な要素だけ値を入れる
@@ -49,19 +45,9 @@ class EnhancedRotationalLinearFunction(Function):
         else:
             d_w = torch.zeros(size=(x.shape[1], grad.shape[1]), dtype=torch.float32)
 
-        if x.ndim == 2:  # Primitive Backward
-            d_w[:, learn_l:learn_r] = torch.matmul(x.t(), grad[:, learn_l:learn_r])
-        elif x.ndim == 3:  # 3D Backward (not sure...)
-            d_w[:, learn_l:learn_r] = torch.matmul(x.permute(0, 2, 1), grad[:, learn_l:learn_r])
-        else:
-            raise BackwardError("x.ndim == %d" % x.ndim)
-
-        if w.ndim == 2:  # Primitive Backward
-            d_x = torch.matmul(grad, torch.t(w))
-        elif w.ndim == 3:  # 3D Backward (not sure...)
-            d_x = torch.matmul(grad, w.permute(0, 2, 1))
-        else:
-            raise BackwardError("w.ndim == %d" % w.ndim)
+        print(d_w.shape)
+        d_w[:, learn_l:learn_r] = torch.matmul(x.t(), grad[:, learn_l:learn_r])
+        d_x = torch.matmul(grad, torch.t(w))
 
         if d_w.ndim == 2:  # Primitive Backward
             return d_x, d_w.t(), d_b, None, None
