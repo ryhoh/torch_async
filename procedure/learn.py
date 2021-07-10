@@ -222,7 +222,7 @@ if __name__ == '__main__':
         if exp == 'rotational_proj':
             my_model = rotatedViT.apply_rotational_into_ViT_Projections(my_model)
         if exp == 'rotational_pwff':
-            my_model = rotatedViT.apply_rotational_into_ViT_Projections(my_model)
+            my_model = rotatedViT.apply_rotational_into_ViT_PositionWiseFeedForward(my_model)
 
         print(my_model)
         my_model.to(device)
