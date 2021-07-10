@@ -44,6 +44,7 @@ class EnhancedRotationalLinearFunction(Function):
         if x.ndim == 2:  # Primitive Backward
             d_w[:, learn_l:learn_r] = torch.matmul(x.t(), grad[:, learn_l:learn_r])
         elif x.ndim == 3:  # 3D Backward (not sure...)
+            print(d_w.shape, x.shape, grad.shape)
             d_w[:, learn_l:learn_r] = torch.matmul(x.permute(0, 2, 1), grad[:, learn_l:learn_r])
         else:
             raise BackwardError("x.ndim == %d" % x.ndim)
