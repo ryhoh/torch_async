@@ -1,6 +1,6 @@
 import argparse
 import sys
-from typing import Tuple
+from typing import Tuple, Iterable
 
 import pandas as pd
 
@@ -23,7 +23,24 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
 
-def rotate_all(learner: dict):
+def rotate_all(learner: dict, verbose: bool = False):
+    def _rotate(target_layers: Iterable[Linear]):
+        if hasattr(target_layers, '__iter__'):
+            for layer in target_layers:
+                if isinstance(layer, Rotatable):
+                    layer.rotate()
+                    if verbose:
+                        print('rotating...')
+
+    # for ViT
+    if isinstance(learner['model'], ViT):
+        for block in learner['model'].transformer.blocks:
+            _rotate(
+                (block.attn.proj_q, block.attn.proj_k, block.attn.proj_v,
+                 block.attn.proj, block.pwff.fc1, block.pwff.fc2))
+        return None
+
+    # Primitive rotate
     dir_of_model = dir(learner['model'])
     attr = set(dir_of_model)
     if 'linear' in attr:  # resnet third-party実装では linear に全結合層がある
@@ -34,15 +51,7 @@ def rotate_all(learner: dict):
         fcs = learner['model'].fc
     else:
         raise AttributeError('model {!r} has no fully-connected layers!'.format(dir_of_model))
-
-    printed = False
-    if hasattr(fcs, '__iter__'):
-        for layer in fcs:
-            if isinstance(layer, Rotatable):
-                layer.rotate()
-                if not printed:
-                    print('rotating...')
-                    printed = True
+    _rotate(fcs)
 
 
 def conduct(model: nn.Module, train_loader: DataLoader, test_loader: DataLoader, lr: float = 0.001) -> dict:
@@ -117,7 +126,7 @@ def run_epoch(learner: dict, train_loader: DataLoader, data_n: int,
                   (epoch + 1, i + 1, reduced_loss.item()))
 
         # 準同期式のグループ交代
-        rotate_all(learner)
+        rotate_all(learner, verbose=(i == 0))
 
     records['train_loss'].append(total_loss / data_n)
     records['train_accuracy'].append(total_correct / data_n)
