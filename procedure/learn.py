@@ -37,7 +37,7 @@ def rotate_all(learner: dict, verbose: bool = False):
         for block in learner['model'].transformer.blocks:
             _rotate(
                 (block.attn.proj_q, block.attn.proj_k, block.attn.proj_v,
-                 block.attn.proj, block.pwff.fc1, block.pwff.fc2))
+                 block.proj, block.pwff.fc1, block.pwff.fc2))
         return None
 
     # Primitive rotate
