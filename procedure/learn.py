@@ -218,7 +218,7 @@ if __name__ == '__main__':
         torch.manual_seed(seed)
 
         # https://github.com/lukemelas/PyTorch-Pretrained-ViT/blob/master/pytorch_pretrained_vit/model.py
-        ViT(
+        my_model = ViT(
             name='B_16',
             pretrained=True,
             # attention_dropout_rate=1.0,
