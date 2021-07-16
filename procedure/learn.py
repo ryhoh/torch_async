@@ -14,7 +14,6 @@ from torch.utils.data import DataLoader
 from torch.nn import Dropout
 from rotational_update import RotationalLinear, Rotatable
 from torchvision.models import vgg16
-import torch_ort
 
 from procedure import preprocess
 from models import rotatedViT
@@ -219,15 +218,13 @@ if __name__ == '__main__':
         torch.manual_seed(seed)
 
         # https://github.com/lukemelas/PyTorch-Pretrained-ViT/blob/master/pytorch_pretrained_vit/model.py
-        my_model = torch_ort.ORTModule(
-            ViT(
-                name='B_16',
-                pretrained=True,
-                # attention_dropout_rate=1.0,
-                # dropout_rate=1.0,
-                image_size=384,
-                num_classes=100
-            )
+        ViT(
+            name='B_16',
+            pretrained=True,
+            # attention_dropout_rate=1.0,
+            # dropout_rate=1.0,
+            image_size=384,
+            num_classes=100
         )
     #     my_model = vgg16(pretrained=False)
     #
