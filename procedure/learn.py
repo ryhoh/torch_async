@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader
 from torch.nn import Dropout
 from rotational_update import RotationalLinear, Rotatable
 from torchvision.models import vgg16
+import torch_ort
 
 from procedure import preprocess
 from models import rotatedViT
@@ -163,9 +164,9 @@ def validate(learner: dict, dataset: dict, records: dict) -> dict:
             total_correct += (predicted.to('cpu') == label_data).sum().item()
             total_loss += loss_vector.sum().item()
 
-        accuracy = total_correct / data_n
-        loss_per_record = total_loss / data_n
-        print('Loss: {:.3f}, Accuracy: {:.3f}'.format(
+        accuracy = '%.8f' % (total_correct / data_n)
+        loss_per_record = '%.8f' % (total_loss / data_n)
+        print('Loss: %s, Accuracy: %s' % (
             loss_per_record,
             accuracy
         ))
@@ -211,20 +212,22 @@ if __name__ == '__main__':
     # on_ratio = 0.5
     # for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
     for exp in (
-            # 'rotational_proj',
-            # 'rotational_pwff',
+            'rotational_proj',
+            'rotational_pwff',
             'normal',
     ):
         torch.manual_seed(seed)
 
         # https://github.com/lukemelas/PyTorch-Pretrained-ViT/blob/master/pytorch_pretrained_vit/model.py
-        my_model = ViT(
-            name='B_16',
-            pretrained=True,
-            # attention_dropout_rate=1.0,
-            # dropout_rate=1.0,
-            image_size=384,
-            num_classes=100
+        my_model = torch_ort.ORTModule(
+            ViT(
+                name='B_16',
+                pretrained=True,
+                # attention_dropout_rate=1.0,
+                # dropout_rate=1.0,
+                image_size=384,
+                num_classes=100
+            )
         )
     #     my_model = vgg16(pretrained=False)
     #
