@@ -212,7 +212,7 @@ if __name__ == '__main__':
     # for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
     for exp in (
             'rotational_proj',
-            'rotational_pwff',
+            # 'rotational_pwff',
             'normal',
     ):
         torch.manual_seed(seed)
