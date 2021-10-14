@@ -211,7 +211,7 @@ if __name__ == '__main__':
     for exp in ('rotational', 'naive'):
         exp_name = exp
         torch.manual_seed(seed)
-        model = vgg.vgg16()
+        model = vgg16()
 
         model.classifier = nn.Sequential(  # remove Dropout
             model.classifier[0],
@@ -225,28 +225,7 @@ if __name__ == '__main__':
             model.classifier[0] = RotationalLinear(model.classifier[0])
             model.classifier[3] = RotationalLinear(model.classifier[3])
 
-        # https://github.com/lukemelas/PyTorch-Pretrained-ViT/blob/master/pytorch_pretrained_vit/model.py
-        my_model = ViT(
-            name='B_16',
-            pretrained=True,
-            # attention_dropout_rate=1.0,
-            # dropout_rate=1.0,
-            image_size=384,
-            num_classes=100
-        )
-    #     my_model = vgg16(pretrained=False)
-    #
-        if exp == 'rotational_proj':
-            my_model = rotatedViT.apply_rotational_into_ViT_Projections(my_model)
-        if exp == 'rotational_pwff':
-            my_model = rotatedViT.apply_rotational_into_ViT_PositionWiseFeedForward(my_model)
-
-        print(my_model)
-        my_model.to(device)
-        record = conduct(my_model, *(preprocess.cifar_100_resized(size=384, mini_batch_size=8)), lr=0.001)
-    #     record = conduct(my_model, *(preprocess.cifar_10_for_224s()), lr=0.0005)
-        write_final_record(record, exp, seed)
-
-    # my_model = Darknet53(80)
-    # print(my_model)
-    # print(preprocess.CocoDetection_loaders())
+        print(model)
+        model.to(device)
+        record = conduct(model, *(preprocess.cifar_10_for_vgg_loaders()))
+        write_final_record(record, exp_name, seed)
