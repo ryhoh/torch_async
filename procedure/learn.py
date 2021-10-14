@@ -215,15 +215,15 @@ if __name__ == '__main__':
 
         model.classifier = nn.Sequential(  # remove Dropout
             model.classifier[0],
-            ReLU(inplace=True),
+            ReLU(inplace=True),  # 1
             model.classifier[3],
-            ReLU(inplace=True),
+            ReLU(inplace=True),  # 4
             Linear(4096, 10)
         )
 
         if exp == 'rotational':
             model.classifier[0] = RotationalLinear(model.classifier[0])
-            model.classifier[3] = RotationalLinear(model.classifier[3])
+            model.classifier[2] = RotationalLinear(model.classifier[2])
 
         print(model)
         model.to(device)
