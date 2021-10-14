@@ -208,14 +208,22 @@ if __name__ == '__main__':
     # 4. Dataset select (preprocess.hogehoge)
     ###########################################################
 
-    # on_ratio = 0.5
-    # for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
-    for exp in (
-            'rotational_proj',
-            # 'rotational_pwff',
-            'normal',
-    ):
+    for exp in ('rotational', 'naive'):
+        exp_name = exp
         torch.manual_seed(seed)
+        model = vgg.vgg16()
+
+        model.classifier = nn.Sequential(  # remove Dropout
+            model.classifier[0],
+            ReLU(inplace=True),
+            model.classifier[3],
+            ReLU(inplace=True),
+            Linear(4096, 10)
+        )
+
+        if exp == 'rotational':
+            model.classifier[0] = RotationalLinear(model.classifier[0])
+            model.classifier[3] = RotationalLinear(model.classifier[3])
 
         # https://github.com/lukemelas/PyTorch-Pretrained-ViT/blob/master/pytorch_pretrained_vit/model.py
         my_model = ViT(
