@@ -188,15 +188,18 @@ if __name__ == '__main__':
     seed = args.seed
     print("seed =", seed)
 
-    on_ratio = 0.75
-    for exp in ('rotational',):
-        exp_name = exp + '_' + str(on_ratio).replace('.', '')
+    for exp in ('rotational', 'naive'):
+        exp_name = exp
         torch.manual_seed(seed)
         model = vgg.vgg16()
 
-        model.classifier[2] = Dropout(p=on_ratio)
-        model.classifier[5] = Dropout(p=on_ratio)
-        model.classifier[-1] = Linear(4096, 10)
+        model.classifier = nn.Sequential(  # remove Dropout
+            model.classifier[0],
+            ReLU(inplace=True),
+            model.classifier[3],
+            ReLU(inplace=True),
+            Linear(4096, 10)
+        )
 
         if exp == 'rotational':
             model.classifier[0] = RotationalLinear(model.classifier[0])
