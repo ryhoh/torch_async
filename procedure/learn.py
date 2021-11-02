@@ -12,8 +12,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 # from torchvision.models import densenet
 from torch.nn import Dropout
-from rotational_update import RotationalLinear, Rotatable
-from torchvision.models import vgg16
+from rotational_update import Rotatable
 
 from procedure import preprocess
 from models import rotatedViT
