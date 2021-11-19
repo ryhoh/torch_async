@@ -210,8 +210,9 @@ if __name__ == '__main__':
     # on_ratio = 0.5
     # for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
     for exp in (
-            # 'rotational_proj',
+            'rotational_proj',
             'rotational_pwff',
+            'rotational_pwff_proj',
             'normal',
     ):
         torch.manual_seed(seed)
@@ -219,7 +220,7 @@ if __name__ == '__main__':
         # https://github.com/lukemelas/PyTorch-Pretrained-ViT/blob/master/pytorch_pretrained_vit/model.py
         my_model = ViT(
             name='B_16',
-            pretrained=True,
+            pretrained=False,
             # attention_dropout_rate=1.0,
             # dropout_rate=1.0,
             image_size=384,
@@ -227,9 +228,9 @@ if __name__ == '__main__':
         )
     #     my_model = vgg16(pretrained=False)
     #
-        if exp == 'rotational_proj':
+        if exp == 'rotational_proj' or exp == 'rotational_pwff_proj':
             my_model = rotatedViT.apply_rotational_into_ViT_Projections(my_model)
-        if exp == 'rotational_pwff':
+        if exp == 'rotational_pwff' or exp == 'rotational_pwff_proj':
             my_model = rotatedViT.apply_rotational_into_ViT_PositionWiseFeedForward(my_model)
 
         print(my_model)
