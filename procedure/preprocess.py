@@ -63,7 +63,7 @@ def cifar_10_resized(size: int = 224, mini_batch_size: int = 32) -> Tuple[DataLo
     return train_loader, test_loader
 
 
-def cifar10_loaders() -> Tuple[DataLoader, DataLoader]:
+def cifar10_loaders(mini_batch_size: int = 32) -> Tuple[DataLoader, DataLoader]:
     # テンソル化, RGB毎に平均と標準偏差を用いて正規化
     transform = transforms.Compose([
         transforms.ToTensor(),
@@ -77,9 +77,9 @@ def cifar10_loaders() -> Tuple[DataLoader, DataLoader]:
                        download=True, transform=transform)
 
     # data_loader
-    train_loader = DataLoader(train_set, batch_size=32,
+    train_loader = DataLoader(train_set, batch_size=mini_batch_size,
                               shuffle=True, num_workers=4)
-    test_loader = DataLoader(test_set, batch_size=32,
+    test_loader = DataLoader(test_set, batch_size=mini_batch_size,
                              shuffle=False, num_workers=4)
 
     return train_loader, test_loader
