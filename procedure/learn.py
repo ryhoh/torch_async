@@ -210,10 +210,10 @@ if __name__ == '__main__':
     # on_ratio = 0.5
     # for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
     for exp in (
+            'normal',
             'rotational_proj',
             'rotational_pwff',
             'rotational_pwff_proj',
-            'normal',
     ):
         torch.manual_seed(seed)
 
