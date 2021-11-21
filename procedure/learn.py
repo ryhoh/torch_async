@@ -224,7 +224,7 @@ if __name__ == '__main__':
             # attention_dropout_rate=1.0,
             # dropout_rate=1.0,
             image_size=32,
-            num_classes=10
+            num_classes=100
         )
     #     my_model = vgg16(pretrained=False)
     #
