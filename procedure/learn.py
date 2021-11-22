@@ -12,7 +12,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 # from torchvision.models import densenet
 from torch.nn import Dropout
-from rotational_update import Rotatable
+from rotational_update import Rotatable, RotationalLinear
 
 from procedure import preprocess
 from models import rotatedViT
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--epochs', help='number of epochs', type=int, required=True)
     args = parser.parse_args()
 
-    GPU_ENABLED = True
+    GPU_ENABLED = True 
     device = "cuda:" + str(args.gpu)
     EPOCHS = args.epochs
     seed = args.seed
@@ -210,17 +210,18 @@ if __name__ == '__main__':
     # on_ratio = 0.5
     # for exp in ('rotational_dropout', 'normal', 'dropout', 'rotational',):
     for exp in (
+            'none',
             'normal',
-            'rotational_proj',
-            'rotational_pwff',
-            'rotational_pwff_proj',
+            'rotational',
+            'dropout',
+            'rotational_dropout',
     ):
         torch.manual_seed(seed)
 
         # https://github.com/lukemelas/PyTorch-Pretrained-ViT/blob/master/pytorch_pretrained_vit/model.py
         my_model = ViT(
             name='B_16',
-            pretrained=False,
+            pretrained=True,
             # attention_dropout_rate=1.0,
             # dropout_rate=1.0,
             image_size=32,
@@ -228,10 +229,45 @@ if __name__ == '__main__':
         )
     #     my_model = vgg16(pretrained=False)
     #
-        if exp == 'rotational_proj' or exp == 'rotational_pwff_proj':
-            my_model = rotatedViT.apply_rotational_into_ViT_Projections(my_model)
-        if exp == 'rotational_pwff' or exp == 'rotational_pwff_proj':
-            my_model = rotatedViT.apply_rotational_into_ViT_PositionWiseFeedForward(my_model)
+        if exp == 'none':
+            my_model.fc = Linear(in_features=768, out_features=100, bias=True)
+        elif exp == 'normal':
+            my_model.fc = nn.Sequential(
+                Linear(in_features=768, out_features=1000, bias=True),
+                ReLU(inplace=True),
+                Linear(in_features=1000, out_features=1000, bias=True),
+                ReLU(inplace=True),
+                Linear(in_features=1000, out_features=100, bias=True),
+            )
+        elif exp == 'rotational':
+            my_model.fc = nn.Sequential(
+                RotationalLinear(in_features=768, out_features=1000, bias=True),
+                ReLU(inplace=True),
+                RotationalLinear(in_features=1000, out_features=1000, bias=True),
+                ReLU(inplace=True),
+                RotationalLinear(in_features=1000, out_features=100, bias=True),
+            )
+        elif exp == 'dropout':
+            my_model.fc = nn.Sequential(
+                Linear(in_features=768, out_features=1000, bias=True),
+                ReLU(inplace=True),
+                Dropout(p=0.5),
+                Linear(in_features=1000, out_features=1000, bias=True),
+                ReLU(inplace=True),
+                Dropout(p=0.5),
+                Linear(in_features=1000, out_features=100, bias=True),
+            )
+        elif exp == 'rotational_dropout':
+            my_model.fc = nn.Sequential(
+                RotationalLinear(in_features=768, out_features=1000, bias=True),
+                ReLU(inplace=True),
+                Dropout(p=0.5),
+                RotationalLinear(in_features=1000, out_features=1000, bias=True),
+                ReLU(inplace=True),
+                Dropout(p=0.5),
+                Linear(in_features=1000, out_features=100, bias=True),
+            )
+
 
         print(my_model)
         my_model.to(device)
