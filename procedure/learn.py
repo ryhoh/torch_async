@@ -224,7 +224,7 @@ if __name__ == '__main__':
             pretrained=True,
             # attention_dropout_rate=1.0,
             # dropout_rate=1.0,
-            image_size=32,
+            image_size=384,
             num_classes=100
         )
     #     my_model = vgg16(pretrained=False)
@@ -272,7 +272,7 @@ if __name__ == '__main__':
         print(my_model)
         my_model.to(device)
         # record = conduct(my_model, *(preprocess.cifar_10_resized(size=384, mini_batch_size=8)), lr=0.001)
-        record = conduct(my_model, *(preprocess.cifar100_loaders(mini_batch_size=128)), lr=0.001)
+        record = conduct(my_model, *(preprocess.cifar_100_resized(size=384, mini_batch_size=128)), lr=0.001)
     #     record = conduct(my_model, *(preprocess.cifar_10_for_224s()), lr=0.0005)
         write_final_record(record, exp, seed)
 
