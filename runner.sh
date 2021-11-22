@@ -4,7 +4,7 @@ export PYTHONPATH="$PYTHONPATH:~/torch_async/models"
 export PYTHONPATH="$PYTHONPATH:~/torch_async/preprocess"
 
 GPU_IDX=0
-EPOCHS=50
+EPOCHS=25
 
 for seed in $(seq 0 4)
 do
