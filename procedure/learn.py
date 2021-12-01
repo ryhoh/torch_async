@@ -225,26 +225,26 @@ if __name__ == '__main__':
     #     my_model = vgg16(pretrained=False)
     #
         if exp == 'none':
-            my_model.fc = Linear(in_features=768, out_features=100, bias=True)
+            my_model.classifier = Linear(in_features=1000, out_features=100, bias=True)
         elif exp == 'normal':
-            my_model.fc = nn.Sequential(
-                Linear(in_features=768, out_features=4096, bias=True),
+            my_model.classifier = nn.Sequential(
+                Linear(in_features=1000, out_features=4096, bias=True),
                 ReLU(inplace=True),
                 Linear(in_features=4096, out_features=4096, bias=True),
                 ReLU(inplace=True),
                 Linear(in_features=1000, out_features=100, bias=True),
             )
         elif exp == 'rotational':
-            my_model.fc = nn.Sequential(
-                RotationalLinear(Linear(in_features=768, out_features=4096, bias=True)),
+            my_model.classifier = nn.Sequential(
+                RotationalLinear(Linear(in_features=1000, out_features=4096, bias=True)),
                 ReLU(inplace=True),
                 RotationalLinear(Linear(in_features=4096, out_features=4096, bias=True)),
                 ReLU(inplace=True),
                 Linear(in_features=1000, out_features=100, bias=True),
             )
         elif exp == 'dropout':
-            my_model.fc = nn.Sequential(
-                Linear(in_features=768, out_features=4096, bias=True),
+            my_model.classifier = nn.Sequential(
+                Linear(in_features=1000, out_features=4096, bias=True),
                 ReLU(inplace=True),
                 Dropout(p=0.5),
                 Linear(in_features=4096, out_features=4096, bias=True),
@@ -253,8 +253,8 @@ if __name__ == '__main__':
                 Linear(in_features=4096, out_features=100, bias=True),
             )
         elif exp == 'rotational_dropout':
-            my_model.fc = nn.Sequential(
-                RotationalLinear(Linear(in_features=768, out_features=4096, bias=True)),
+            my_model.classifier = nn.Sequential(
+                RotationalLinear(Linear(in_features=1000, out_features=4096, bias=True)),
                 ReLU(inplace=True),
                 Dropout(p=0.5),
                 RotationalLinear(Linear(in_features=4096, out_features=4096, bias=True)),
