@@ -10,12 +10,12 @@ import torch.nn as nn
 from torch.nn.modules import Linear, ReLU
 import torch.optim as optim
 from torch.utils.data import DataLoader
-# from torchvision.models import densenet
 from torch.nn import Dropout
 from rotational_update import Rotatable, RotationalLinear
+from torchvision.models.vgg import densenet121
 
 from procedure import preprocess
-from models import rotatedViT
+# from models.densenet_pytorch.densenet import DenseNet
 
 
 torch.backends.cudnn.deterministic = True
@@ -219,13 +219,8 @@ if __name__ == '__main__':
         torch.manual_seed(seed)
 
         # https://github.com/lukemelas/PyTorch-Pretrained-ViT/blob/master/pytorch_pretrained_vit/model.py
-        my_model = ViT(
-            name='B_16',
-            pretrained=False,
-            # attention_dropout_rate=1.0,
-            # dropout_rate=1.0,
-            image_size=384,
-            num_classes=100
+        my_model = densenet121(
+            pretrained=False
         )
     #     my_model = vgg16(pretrained=False)
     #
@@ -233,46 +228,46 @@ if __name__ == '__main__':
             my_model.fc = Linear(in_features=768, out_features=100, bias=True)
         elif exp == 'normal':
             my_model.fc = nn.Sequential(
-                Linear(in_features=768, out_features=1000, bias=True),
+                Linear(in_features=768, out_features=4096, bias=True),
                 ReLU(inplace=True),
-                Linear(in_features=1000, out_features=1000, bias=True),
+                Linear(in_features=4096, out_features=4096, bias=True),
                 ReLU(inplace=True),
                 Linear(in_features=1000, out_features=100, bias=True),
             )
         elif exp == 'rotational':
             my_model.fc = nn.Sequential(
-                RotationalLinear(Linear(in_features=768, out_features=1000, bias=True)),
+                RotationalLinear(Linear(in_features=768, out_features=4096, bias=True)),
                 ReLU(inplace=True),
-                RotationalLinear(Linear(in_features=1000, out_features=1000, bias=True)),
+                RotationalLinear(Linear(in_features=4096, out_features=4096, bias=True)),
                 ReLU(inplace=True),
                 Linear(in_features=1000, out_features=100, bias=True),
             )
         elif exp == 'dropout':
             my_model.fc = nn.Sequential(
-                Linear(in_features=768, out_features=1000, bias=True),
+                Linear(in_features=768, out_features=4096, bias=True),
                 ReLU(inplace=True),
                 Dropout(p=0.5),
-                Linear(in_features=1000, out_features=1000, bias=True),
+                Linear(in_features=4096, out_features=4096, bias=True),
                 ReLU(inplace=True),
                 Dropout(p=0.5),
-                Linear(in_features=1000, out_features=100, bias=True),
+                Linear(in_features=4096, out_features=100, bias=True),
             )
         elif exp == 'rotational_dropout':
             my_model.fc = nn.Sequential(
-                RotationalLinear(Linear(in_features=768, out_features=1000, bias=True)),
+                RotationalLinear(Linear(in_features=768, out_features=4096, bias=True)),
                 ReLU(inplace=True),
                 Dropout(p=0.5),
-                RotationalLinear(Linear(in_features=1000, out_features=1000, bias=True)),
+                RotationalLinear(Linear(in_features=4096, out_features=4096, bias=True)),
                 ReLU(inplace=True),
                 Dropout(p=0.5),
-                Linear(in_features=1000, out_features=100, bias=True),
+                Linear(in_features=4096, out_features=100, bias=True),
             )
 
 
         print(my_model)
         my_model.to(device)
         # record = conduct(my_model, *(preprocess.cifar_10_resized(size=384, mini_batch_size=8)), lr=0.001)
-        record = conduct(my_model, *(preprocess.cifar_100_resized(size=224, mini_batch_size=8)), lr=0.001)
+        record = conduct(my_model, *(preprocess.cifar_100_resized(size=32, mini_batch_size=32)), lr=0.001)
     #     record = conduct(my_model, *(preprocess.cifar_10_for_224s()), lr=0.0005)
         write_final_record(record, exp, seed)
 
