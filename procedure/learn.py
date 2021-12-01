@@ -221,7 +221,7 @@ if __name__ == '__main__':
         # https://github.com/lukemelas/PyTorch-Pretrained-ViT/blob/master/pytorch_pretrained_vit/model.py
         my_model = ViT(
             name='B_16',
-            pretrained=True,
+            pretrained=False,
             # attention_dropout_rate=1.0,
             # dropout_rate=1.0,
             image_size=384,
@@ -241,11 +241,11 @@ if __name__ == '__main__':
             )
         elif exp == 'rotational':
             my_model.fc = nn.Sequential(
-                RotationalLinear(in_features=768, out_features=1000, bias=True),
+                RotationalLinear(Linear(in_features=768, out_features=1000, bias=True)),
                 ReLU(inplace=True),
-                RotationalLinear(in_features=1000, out_features=1000, bias=True),
+                RotationalLinear(Linear(in_features=1000, out_features=1000, bias=True)),
                 ReLU(inplace=True),
-                RotationalLinear(in_features=1000, out_features=100, bias=True),
+                Linear(in_features=1000, out_features=100, bias=True),
             )
         elif exp == 'dropout':
             my_model.fc = nn.Sequential(
@@ -259,10 +259,10 @@ if __name__ == '__main__':
             )
         elif exp == 'rotational_dropout':
             my_model.fc = nn.Sequential(
-                RotationalLinear(in_features=768, out_features=1000, bias=True),
+                RotationalLinear(Linear(in_features=768, out_features=1000, bias=True)),
                 ReLU(inplace=True),
                 Dropout(p=0.5),
-                RotationalLinear(in_features=1000, out_features=1000, bias=True),
+                RotationalLinear(Linear(in_features=1000, out_features=1000, bias=True)),
                 ReLU(inplace=True),
                 Dropout(p=0.5),
                 Linear(in_features=1000, out_features=100, bias=True),
@@ -272,7 +272,7 @@ if __name__ == '__main__':
         print(my_model)
         my_model.to(device)
         # record = conduct(my_model, *(preprocess.cifar_10_resized(size=384, mini_batch_size=8)), lr=0.001)
-        record = conduct(my_model, *(preprocess.cifar_100_resized(size=384, mini_batch_size=8)), lr=0.001)
+        record = conduct(my_model, *(preprocess.cifar_100_resized(size=224, mini_batch_size=8)), lr=0.001)
     #     record = conduct(my_model, *(preprocess.cifar_10_for_224s()), lr=0.0005)
         write_final_record(record, exp, seed)
 
