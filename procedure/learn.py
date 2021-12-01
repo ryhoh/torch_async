@@ -12,7 +12,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.nn import Dropout
 from rotational_update import Rotatable, RotationalLinear
-from torchvision.models.vgg import densenet121
+from torchvision.models import densenet121
 
 from procedure import preprocess
 # from models.densenet_pytorch.densenet import DenseNet
